@@ -6,77 +6,97 @@ export const RESOURCES: Resource[] = [
     title: 'Benvenuto in Milo Everwood!',
     description: 'Introduzione al mondo Milo Everwood e alle risorse del Dog Kit.',
     type: 'pdf',
-    url: 'https://drive.google.com/file/d/1_akvapCGrn8GmK9cPRPP1yN32AjZB4K3/view?usp=drive_link'
+    url: 'https://drive.google.com/file/d/1_akvapCGrn8GmK9cPRPP1yN32AjZB4K3/view?usp=drive_link',
+    access: 'free'
   },
   {
     id: 'dog-kit-ita',
     title: 'Dog Kit ITA (Guida completa)',
     description: 'La guida completa con tutto ciò che ti serve per gestire il tuo cucciolo: routine, salute, addestramento e molto altro.',
     type: 'pdf',
-    url: 'https://drive.google.com/file/d/1oovFrzHNtcU-TZ1UcSQGzIFNIerkFFLr/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/1oovFrzHNtcU-TZ1UcSQGzIFNIerkFFLr/view?usp=sharing',
+    access: 'premium'
   },
   {
     id: 'problems-solutions',
     title: 'Guida pratica 10 problemi del cane e Soluzioni',
     description: 'Strategie efficaci per risolvere i comportamenti problematici più comuni del tuo cucciolo.',
     type: 'pdf',
-    url: 'https://drive.google.com/file/d/14UYhIhlGzVO5owv3n6AjjKADElhqreZ5/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/14UYhIhlGzVO5owv3n6AjjKADElhqreZ5/view?usp=sharing',
+    access: 'premium'
   },
   {
     id: 'golden-rules',
     title: "Le 10 regole d'oro per Educare il tuo cane",
     description: "I principi fondamentali per un'educazione efficace basata sul rispetto e la comprensione del tuo cane.",
     type: 'pdf',
-    url: 'https://drive.google.com/file/d/1R2WkUzhDImhYGImK3-s-BAEt4UdlGmlx/view?usp=drive_link'
+    url: 'https://drive.google.com/file/d/1R2WkUzhDImhYGImK3-s-BAEt4UdlGmlx/view?usp=drive_link',
+    access: 'premium'
   },
   {
     id: 'first-aid',
     title: 'Primo soccorso canino',
     description: 'Manuale essenziale per gestire le emergenze e proteggere la salute del tuo cucciolo in situazioni critiche.',
     type: 'pdf',
-    url: 'https://drive.google.com/file/d/1L4MUQMWdzKop4NpOOVEHO0WlWA-6E1/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/1L4MUQMWdzKop4NpOOVEHO0WlWA-6E1/view?usp=sharing',
+    access: 'premium'
   },
   {
     id: 'five-minutes-guide',
     title: 'Guida 5 minuti al giorno col cane',
     description: 'Mini-guida PDF per applicare il metodo dei 5 minuti quotidiani con il tuo cane.',
     type: 'pdf',
-    url: 'https://drive.google.com/file/d/1Hm0ldWJtyJvjwMHaQoH4IOHydeK3O-o/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/1Hm0ldWJtyJvjwMHaQoH4IOHydeK3O-o/view?usp=sharing',
+    access: 'premium'
   },
   {
     id: 'video-disasters',
     title: 'I 10 "Disastri" dei cuccioli',
     description: 'Scopri le situazioni più comuni che creano problemi e come prevenirle efficacemente.',
     type: 'video',
-    url: 'https://drive.google.com/file/d/1z7-pvPcv0lhxI2CblyF3-PYVbuXw7UUk/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/1z7-pvPcv0lhxI2CblyF3-PYVbuXw7UUk/view?usp=sharing',
+    access: 'free'
   },
   {
     id: 'video-welcome',
     title: 'Benvenuto Cucciolo',
     description: 'Video slideshow completo per affrontare con successo la prima settimana con il tuo nuovo cucciolo.',
     type: 'video',
-    url: 'https://drive.google.com/file/d/1HAYTXkrL8dpIPgDw670eSknxmEXl4tG/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/1HAYTXkrL8dpIPgDw670eSknxmEXl4tG/view?usp=sharing',
+    access: 'premium'
   },
   {
     id: 'video-five-minutes',
     title: '5 minuti al giorno col Cane',
     description: 'Video dedicato al metodo dei 5 minuti per rafforzare il legame ogni giorno.',
     type: 'video',
-    url: 'https://drive.google.com/file/d/1cZ47ZrGqe7tGwrIIQOd48kqFBtLaoElK/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/1cZ47ZrGqe7tGwrIIQOd48kqFBtLaoElK/view?usp=sharing',
+    access: 'premium'
   },
   {
     id: 'podcast-ethology',
     title: 'Guida etologica al primo mese del cucciolo',
     description: 'Tutto ciò che devi sapere per affrontare con successo le prime settimane con il tuo nuovo amico.',
     type: 'audio',
-    url: 'https://drive.google.com/file/d/11-OwYuF91BbbZnoh1sB72HPYLbzwMPUJ/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/11-OwYuF91BbbZnoh1sB72HPYLbzwMPUJ/view?usp=sharing',
+    access: 'free'
   },
   {
     id: 'podcast-no-punishment',
     title: 'Risolvere i problemi del cane senza punizioni',
     description: 'Metodi efficaci e positivi per correggere i comportamenti indesiderati del tuo cucciolo.',
     type: 'audio',
-    url: 'https://drive.google.com/file/d/1_Qg_5qLd5KQyuTkgO-YxMeBkyTj7xFYL/view?usp=sharing'
+    url: 'https://drive.google.com/file/d/1_Qg_5qLd5KQyuTkgO-YxMeBkyTj7xFYL/view?usp=sharing',
+    access: 'premium'
+  },
+  {
+    id: 'video-recall-advance',
+    title: 'Gestione del Richiamo Avanzato',
+    description: 'Video guida in arrivo per impostare un fantastico richiamo in spazi aperti in totale sicurezza.',
+    type: 'video',
+    url: '',
+    access: 'premium',
+    comingSoon: true
   }
 ];
 
@@ -195,24 +215,24 @@ export const FAQ_DATA = [
     category: "Supporto & App",
     questions: [
       {
-        q: "Posso usare Dog Kit per più cani?",
-        a: "Sì! Puoi aggiungere tutti i tuoi animali allo stesso account."
+        q: "A cosa serve il codice licenza?",
+        a: "Serve a sbloccare l’app la prima volta su un nuovo dispositivo."
       },
       {
-        q: "Funziona offline?",
-        a: "Sì, puoi inserire dati senza connessione. Si sincronizza quando torni online."
+        q: "A cosa serve la password personale?",
+        a: "Serve per gli accessi successivi sullo stesso dispositivo."
       },
       {
-        q: "Posso disdire quando voglio?",
-        a: "Assolutamente sì. Niente vincoli, cancelli in 2 click."
+        q: "Perché non ricevo i promemoria?",
+        a: "Controlla di aver autorizzato le notifiche e di aver impostato almeno un orario attivo."
       },
       {
-        q: "I miei dati sono al sicuro?",
-        a: "Sì. Usiamo crittografia bancaria e non vendiamo mai i tuoi dati."
+        q: "Su iPhone funziona tutto subito?",
+        a: "Le notifiche possono richiedere l’uso dell’app come web app installata dalla schermata Home e l’autorizzazione tramite interazione esplicita."
       },
       {
-        q: "Cosa succede dopo il trial gratuito?",
-        a: "Ricevi un'email 24h prima della scadenza. Se non fai nulla, l'account diventa gratuito con funzioni base."
+        q: "Le notifiche partono da sole appena apro l’app?",
+        a: "No. Il permesso va richiesto solo quando scegli tu di attivarlo."
       }
     ]
   }

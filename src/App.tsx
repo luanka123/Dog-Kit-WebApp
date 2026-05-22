@@ -52,7 +52,9 @@ import {
   ShieldAlert,
   Bell,
   Volume2,
-  Settings
+  Settings,
+  Droplet,
+  Utensils
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
@@ -74,21 +76,6 @@ export default function App() {
     return hasSeenWelcome ? 'home' : 'welcome';
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // Security State
-  const [isActivated, setIsActivated] = useState(() => {
-    return localStorage.getItem('dogkit_activated') === 'true';
-  });
-  const [ownerInfo, setOwnerInfo] = useState(() => {
-    const saved = localStorage.getItem('dogkit_owner_info');
-    return saved ? JSON.parse(saved) : { name: '', birthDate: '' };
-  });
-  const [hasPersonalPassword, setHasPersonalPassword] = useState(() => {
-    return !!localStorage.getItem('dogkit_user_password');
-  });
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('dogkit_authenticated') === 'true';
-  });
   
   // Data State
   const [routine, setRoutine] = useState<RoutineItem[]>(() => {
@@ -148,8 +135,6 @@ export default function App() {
 
   // Notification Logic
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     const checkNotifications = () => {
       const now = new Date();
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -176,7 +161,7 @@ export default function App() {
 
     const interval = setInterval(checkNotifications, 30000); // Check every 30 seconds
     return () => clearInterval(interval);
-  }, [notificationSettings, isAuthenticated]);
+  }, [notificationSettings]);
   useEffect(() => {
     localStorage.setItem('dogkit_routine', JSON.stringify(routine));
   }, [routine]);
@@ -224,30 +209,6 @@ export default function App() {
     </button>
   );
 
-  if (!isActivated || !hasPersonalPassword || !isAuthenticated) {
-    return (
-      <SecurityManager 
-        isActivated={isActivated}
-        hasPersonalPassword={hasPersonalPassword}
-        onActivated={(name, birthDate) => {
-          setIsActivated(true);
-          setOwnerInfo({ name, birthDate });
-          localStorage.setItem('dogkit_activated', 'true');
-          localStorage.setItem('dogkit_owner_info', JSON.stringify({ name, birthDate }));
-        }}
-        onPasswordSet={() => {
-          setHasPersonalPassword(true);
-          setIsAuthenticated(true);
-          sessionStorage.setItem('dogkit_authenticated', 'true');
-        }}
-        onLogin={() => {
-          setIsAuthenticated(true);
-          sessionStorage.setItem('dogkit_authenticated', 'true');
-        }}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex">
       {/* Sidebar Overlay */}
@@ -293,13 +254,6 @@ export default function App() {
           </nav>
 
           <div className="mt-auto pt-6 border-t border-slate-100">
-            {isActivated && (
-              <div className="mb-4 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-                <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Licenza Intestata a:</p>
-                <p className="text-[11px] font-bold text-indigo-700 truncate">{ownerInfo.name}</p>
-                <p className="text-[9px] text-indigo-400 mt-0.5">{ownerInfo.birthDate}</p>
-              </div>
-            )}
             <div className="p-4 bg-slate-50 rounded-2xl">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Versione App</p>
               <p className="text-xs font-bold text-slate-600">1.2.0 - Offline Mode</p>
@@ -342,7 +296,6 @@ export default function App() {
                 routine={routine} 
                 trainingProgress={trainingProgress} 
                 onNavigate={setCurrentPage} 
-                ownerName={ownerInfo.name}
               />}
               {currentPage === 'welcome' && <WelcomeView onStart={() => {
                 localStorage.setItem('dogkit_welcome_seen', 'true');
@@ -371,202 +324,13 @@ export default function App() {
 
 // --- Sub-Views ---
 
-// --- Security Components ---
-
-function SecurityManager({ 
-  isActivated, 
-  hasPersonalPassword, 
-  onActivated, 
-  onPasswordSet, 
-  onLogin 
-}: { 
-  isActivated: boolean, 
-  hasPersonalPassword: boolean, 
-  onActivated: (name: string, birthDate: string) => void, 
-  onPasswordSet: () => void, 
-  onLogin: () => void 
-}) {
-  const [name, setName] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [activationCode, setActivationCode] = useState('');
-  const [input, setInput] = useState('');
-  const [confirmInput, setConfirmInput] = useState('');
-  const [error, setError] = useState('');
-
-  // Algoritmo di verifica (Checksum professionale)
-  const verifyCode = (userName: string, userBirth: string, code: string) => {
-    const cleanName = userName.toLowerCase().trim().replace(/\s/g, '');
-    const cleanBirth = userBirth.replace(/-/g, '');
-    const combined = cleanName + cleanBirth + "MILO_SECRET_2024";
-    
-    // Semplice hash DJB2
-    let hash = 5381;
-    for (let i = 0; i < combined.length; i++) {
-      hash = ((hash << 5) + hash) + combined.charCodeAt(i);
-    }
-    
-    const expectedCode = Math.abs(hash).toString(16).toUpperCase().slice(0, 8);
-    return code.toUpperCase() === expectedCode || code.toUpperCase() === 'MILO-MASTER-2024';
-  };
-
-  const handleActivation = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !birthDate || !activationCode) {
-      setError('Compila tutti i campi.');
-      return;
-    }
-
-    if (verifyCode(name, birthDate, activationCode)) {
-      onActivated(name, birthDate);
-      setError('');
-    } else {
-      setError('Codice di attivazione non valido per questi dati.');
-      setTimeout(() => setError(''), 4000);
-    }
-  };
-
-  const handleSetPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (input.length < 4) {
-      setError('La password deve essere di almeno 4 caratteri.');
-      return;
-    }
-    if (input !== confirmInput) {
-      setError('Le password non coincidono.');
-      return;
-    }
-    localStorage.setItem('dogkit_user_password', input);
-    onPasswordSet();
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const saved = localStorage.getItem('dogkit_user_password');
-    if (input === saved || input === 'MILO-SUPER-ADMIN') {
-      onLogin();
-    } else {
-      setError('Password errata.');
-      setTimeout(() => setError(''), 2000);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-indigo-600 flex items-center justify-center p-6">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center"
-      >
-        <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-100">
-          {!isActivated ? <ShieldAlert size={40} /> : hasPersonalPassword ? <Lock size={40} /> : <Key size={40} />}
-        </div>
-
-        {!isActivated ? (
-          <>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Attivazione Kit</h2>
-            <p className="text-slate-500 mb-6 text-sm">Inserisci i tuoi dati e il codice di licenza per sbloccare il tuo Dog Kit.</p>
-            <form onSubmit={handleActivation} className="space-y-4 text-left">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nome e Cognome</label>
-                <input 
-                  type="text" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Es: Mario Rossi"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-300 font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Data di Nascita</label>
-                <input 
-                  type="date" 
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-300 font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Codice Licenza</label>
-                <input 
-                  type="text" 
-                  value={activationCode}
-                  onChange={(e) => setActivationCode(e.target.value)}
-                  placeholder="XXXX-XXXX"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-300 text-center font-mono font-bold tracking-widest uppercase"
-                />
-              </div>
-              {error && <p className="text-red-500 text-xs font-bold text-center">{error}</p>}
-              <button type="submit" className="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 mt-2">
-                Attiva Licenza
-              </button>
-            </form>
-          </>
-        ) : !hasPersonalPassword ? (
-          <>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Imposta Password</h2>
-            <p className="text-slate-500 mb-8 text-sm">Licenza verificata! Crea una password personale per proteggere i tuoi dati su questo dispositivo.</p>
-            <form onSubmit={handleSetPassword} className="space-y-4 text-left">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-2">Nuova Password</label>
-                <input 
-                  type="password" 
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-300 text-center font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-2">Conferma Password</label>
-                <input 
-                  type="password" 
-                  value={confirmInput}
-                  onChange={(e) => setConfirmInput(e.target.value)}
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-300 text-center font-bold"
-                />
-              </div>
-              {error && <p className="text-red-500 text-xs font-bold text-center">{error}</p>}
-              <button type="submit" className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
-                Salva e Accedi
-              </button>
-            </form>
-          </>
-        ) : (
-          <>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Accesso Riservato</h2>
-            <p className="text-slate-500 mb-8 text-sm">Bentornato! Inserisci la tua password personale.</p>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <input 
-                type="password" 
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Password..."
-                className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-300 text-center font-bold tracking-widest"
-                autoFocus
-              />
-              {error && <p className="text-red-500 text-xs font-bold">{error}</p>}
-              <button type="submit" className="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
-                Sblocca Kit <ChevronRight size={20} />
-              </button>
-            </form>
-          </>
-        )}
-
-        <div className="mt-8 pt-6 border-t border-slate-100">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Milo Everwood</p>
-          <p className="text-xs font-bold text-slate-600">Digital Dog Care Edition</p>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-function HomeView({ routine, trainingProgress, onNavigate, ownerName }: any) {
+function HomeView({ routine, trainingProgress, onNavigate }: any) {
   const completedRoutine = routine.filter((r: any) => r.completed).length;
   
   return (
     <div className="space-y-8">
       <header className="mb-10">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Bentornato, {ownerName || 'Milo'}! 🐾</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Bentornato! 🐾</h2>
         <p className="text-slate-500 mt-1">Ecco come sta andando la giornata del tuo cucciolo.</p>
       </header>
 
@@ -580,7 +344,7 @@ function HomeView({ routine, trainingProgress, onNavigate, ownerName }: any) {
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Routine</span>
           </div>
           <h3 className="text-2xl font-bold">{completedRoutine}/{routine.length}</h3>
-          <p className="text-sm text-slate-500 mb-6">Attività completate oggi</p>
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">Controlla a colpo d’occhio cosa hai già completato oggi.</p>
           <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
@@ -593,6 +357,7 @@ function HomeView({ routine, trainingProgress, onNavigate, ownerName }: any) {
           </button>
         </div>
 
+        {/* Training Card */}
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
@@ -601,7 +366,7 @@ function HomeView({ routine, trainingProgress, onNavigate, ownerName }: any) {
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Training</span>
           </div>
           <h3 className="text-2xl font-bold">{Math.round(trainingProgress)}%</h3>
-          <p className="text-sm text-slate-500 mb-6">Progresso settimanale</p>
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">Il tuo progresso settimanale nei 5 minuti ti aiuta a mantenere costanza e serenità.</p>
           <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
@@ -614,18 +379,20 @@ function HomeView({ routine, trainingProgress, onNavigate, ownerName }: any) {
           </button>
         </div>
 
-        {/* FAQ Quick Access */}
-        <div className="bg-indigo-600 p-6 rounded-3xl text-white shadow-xl shadow-indigo-200 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <MessageCircleQuestion size={24} />
+        {/* Warning / Emergency Card */}
+        <div className="bg-red-50 p-6 rounded-3xl text-red-950 border border-red-200 shadow-xl shadow-red-50 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center">
+                <ShieldAlert size={24} />
+              </div>
+              <span className="text-xs font-bold text-red-600 uppercase tracking-widest">Urgenze</span>
             </div>
-            <span className="text-xs font-bold text-white/60 uppercase tracking-widest">FAQ</span>
+            <h3 className="text-xl font-bold mb-2">Primo Soccorso</h3>
+            <p className="text-sm text-red-800/90 leading-relaxed mb-6">Hai bisogno di aiuto rapido? Apri subito il modulo Primo Soccorso.</p>
           </div>
-          <h3 className="text-xl font-bold mb-2">Dubbi o domande?</h3>
-          <p className="text-sm text-white/80 flex-1">Consulta la nostra guida rapida con le risposte degli esperti.</p>
-          <button onClick={() => onNavigate('faq')} className="mt-6 w-full py-3 bg-white text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition-colors">
-            Leggi FAQ
+          <button onClick={() => onNavigate('first-aid')} className="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors">
+            Procedure d'Emergenza
           </button>
         </div>
       </div>
@@ -661,26 +428,46 @@ function HomeView({ routine, trainingProgress, onNavigate, ownerName }: any) {
 }
 
 function RoutineView({ routine, onToggle, setRoutine }: any) {
+  const [showResetToast, setShowResetToast] = useState(false);
   const morning = routine.filter((r: any) => r.type === 'morning');
   const evening = routine.filter((r: any) => r.type === 'evening');
 
   const resetRoutine = () => {
-    if (confirm('Vuoi resettare tutte le attività di oggi?')) {
+    if (confirm('Vuoi iniziare una nuova giornata? Puoi azzerare la routine con un solo tocco.')) {
       setRoutine((prev: any) => prev.map((r: any) => ({ ...r, completed: false })));
+      setShowResetToast(true);
+      setTimeout(() => setShowResetToast(false), 4000);
     }
   };
 
   return (
     <div className="space-y-8">
+      <AnimatePresence>
+        {showResetToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-indigo-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3"
+          >
+            <Sparkles size={20} />
+            <span className="font-bold">Routine azzerata. Sei pronto per una nuova giornata insieme al tuo cane! 🐾</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Routine Quotidiana</h2>
-          <p className="text-slate-500">Monitora le attività di oggi</p>
+          <p className="text-slate-500">Segna le attività svolte per accompagnare il tuo cane tra mattina e sera senza dimenticanze.</p>
         </div>
-        <button onClick={resetRoutine} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
-          <RotateCcw size={18} />
-          <span className="font-semibold text-sm">Resetta</span>
-        </button>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <button onClick={resetRoutine} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
+            <RotateCcw size={18} />
+            <span className="font-semibold text-sm">Resetta</span>
+          </button>
+          <span className="text-[10px] text-slate-400">Vuoi iniziare una nuova giornata? Azzerando si riparte.</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -747,23 +534,58 @@ function RoutineView({ routine, onToggle, setRoutine }: any) {
 }
 
 function TrainingView({ training, onToggle, progress, setTraining }: any) {
+  const [showCompletedToast, setShowCompletedToast] = useState(false);
+
   const resetProgress = () => {
     if (confirm('Vuoi resettare il progresso settimanale?')) {
       setTraining((prev: any) => prev.map((t: any) => ({ ...t, completed: false })));
     }
   };
 
+  const handleToggleLocal = (id: number) => {
+    const item = training.find((t: any) => t.id === id);
+    onToggle(id);
+    if (item && !item.completed) {
+      setShowCompletedToast(true);
+      setTimeout(() => setShowCompletedToast(false), 3000);
+    }
+  };
+
   return (
     <div className="space-y-8">
+      <AnimatePresence>
+        {showCompletedToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3"
+          >
+            <CheckCircle2 size={20} />
+            <span className="font-bold">Attività completata. Ottimo lavoro! 🐾</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">5 Minuti Settimanali</h2>
-          <p className="text-slate-500">Rafforza il legame con il tuo cane</p>
+          <p className="text-slate-500">Ogni giorno trovi una mini attività per rafforzare educazione, relazione e attenzione.</p>
         </div>
-        <button onClick={resetProgress} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
+        <button onClick={resetProgress} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all font-semibold text-sm shrink-0">
           <RotateCcw size={18} />
-          <span className="font-semibold text-sm">Reset</span>
+          Reset
         </button>
+      </div>
+
+      <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 p-6 rounded-3xl text-white shadow-lg space-y-2">
+        <div className="flex items-center gap-3">
+          <Sparkles size={20} className="text-indigo-200" />
+          <h4 className="font-bold uppercase tracking-wider text-xs text-indigo-100">Cura & Consistenza</h4>
+        </div>
+        <p className="text-sm text-indigo-50/90 font-medium">
+          Bastano pochi minuti al giorno, ma fatti con calma e continuità.
+        </p>
       </div>
 
       <div className="bg-white p-6 rounded-3xl border border-slate-200">
@@ -790,7 +612,7 @@ function TrainingView({ training, onToggle, progress, setTraining }: any) {
           >
             <div className="p-6 flex items-start gap-4">
               <div 
-                onClick={() => onToggle(day.id)}
+                onClick={() => handleToggleLocal(day.id)}
                 className={`shrink-0 w-8 h-8 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-colors ${
                   day.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-indigo-400'
                 }`}
@@ -827,6 +649,7 @@ function TrainingView({ training, onToggle, progress, setTraining }: any) {
 function ShoppingView({ items, setItems }: { items: ShoppingItem[], setItems: React.Dispatch<React.SetStateAction<ShoppingItem[]>> }) {
   const [newItemLabel, setNewItemLabel] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('Cibo');
+  const [showAddedToast, setShowAddedToast] = useState(false);
 
   const categories = Array.from(new Set(items.map((i: any) => i.category)));
 
@@ -846,6 +669,8 @@ function ShoppingView({ items, setItems }: { items: ShoppingItem[], setItems: Re
     };
     setItems(prev => [...prev, newItem]);
     setNewItemLabel('');
+    setShowAddedToast(true);
+    setTimeout(() => setShowAddedToast(false), 3000);
   };
 
   const removeItem = (id: string) => {
@@ -860,10 +685,24 @@ function ShoppingView({ items, setItems }: { items: ShoppingItem[], setItems: Re
 
   return (
     <div className="space-y-8">
+      <AnimatePresence>
+        {showAddedToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-indigo-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-2"
+          >
+            <Sparkles size={16} />
+            <span className="font-bold">Elemento aggiunto alla lista! 🐾</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Shopping List</h2>
-          <p className="text-slate-500">Cose da comprare per il tuo cucciolo</p>
+          <p className="text-slate-500">Tieni sotto controllo ciò che serve davvero al tuo cane, tra elementi essenziali e acquisti da ricordare.</p>
         </div>
         <button onClick={resetList} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all w-fit">
           <RotateCcw size={18} />
@@ -879,7 +718,7 @@ function ShoppingView({ items, setItems }: { items: ShoppingItem[], setItems: Re
             type="text" 
             value={newItemLabel}
             onChange={(e) => setNewItemLabel(e.target.value)}
-            placeholder="Esempio: Nuova cuccia..."
+            placeholder="Aggiungi un nuovo elemento"
             className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-300 transition-all"
           />
         </div>
@@ -943,18 +782,161 @@ function ShoppingView({ items, setItems }: { items: ShoppingItem[], setItems: Re
   );
 }
 
+function ContentAccessBadge({ access, comingSoon }: { access?: 'free' | 'premium', comingSoon?: boolean }) {
+  if (comingSoon) {
+    return (
+      <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-50 text-amber-600 border border-amber-100">
+        In Arrivo
+      </span>
+    );
+  }
+  if (access === 'premium') {
+    return (
+      <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center gap-1">
+        <Lock size={10} className="text-indigo-500 shrink-0" /> Premium
+      </span>
+    );
+  }
+  return (
+    <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+      Gratis
+    </span>
+  );
+}
+
+function UpgradeModal({ isOpen, onClose, resource }: { isOpen: boolean, onClose: () => void, resource: any }) {
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="bg-white rounded-[2rem] max-w-lg w-full p-8 border border-slate-100 shadow-2xl relative overflow-hidden text-left"
+        >
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -z-10 opacity-70" />
+          
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors"
+          >
+            <X size={20} />
+          </button>
+
+          <div className="flex flex-col items-center text-center space-y-6">
+            <div className="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-violet-600 text-white rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-indigo-200">
+              <Sparkles size={32} className="animate-pulse" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                Sblocca il Kit Completo 🐾
+              </h3>
+              {resource && (
+                <p className="text-xs text-indigo-600 font-bold bg-indigo-50 px-3 py-1.5 rounded-xl inline-block mt-1">
+                  Richiesto per: "{resource.title}"
+                </p>
+              )}
+            </div>
+
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Alcuni contenuti sono disponibili gratuitamente per farti provare il Dog Kit. 
+              <strong> Il Kit completo sblocca tutti i contenuti premium attuali e futuri</strong> per garantirti supporto a 360°.
+            </p>
+
+            <div className="bg-slate-50 p-5 rounded-2xl w-full text-left space-y-3 border border-slate-100">
+              <h4 className="font-bold text-[10px] uppercase tracking-wider text-slate-400">Cosa contiene il Kit completo:</h4>
+              <ul className="space-y-2 text-xs font-semibold text-slate-600">
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-500 font-bold shrink-0">✓</span>
+                  <span>Tutti i video tutorial completi (primi passi, 5 minuti al giorno e altro)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-500 font-bold shrink-0">✓</span>
+                  <span>I podcast esclusivi per risolvere i problemi quotidiani senza punizioni</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-500 font-bold shrink-0">✓</span>
+                  <span>Tutte le guide pratiche scaricabili in PDF ad alta definizione</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-500 font-bold shrink-0">✓</span>
+                  <span>In arrivo: Nuovi contenuti audio e video senza alcun costo aggiuntivo</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-3 w-full">
+              <a 
+                href="https://stan.store/MiloEverwood/p/-milo-everwood-dog-kit"
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-center rounded-2xl transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-2"
+              >
+                <span>Sblocca il Kit completo</span>
+                <ExternalLink size={18} />
+              </a>
+              <p className="text-[10px] text-slate-400">
+                Acquista su Stan Store per ottenere accesso completo. Una volta sbloccato, avrai tutte le risorse incluse.
+              </p>
+            </div>
+
+            <button 
+              onClick={onClose}
+              className="text-[10px] text-slate-400 hover:text-slate-600 uppercase tracking-widest font-bold transition-colors pt-1"
+            >
+              Continua con la versione gratuita
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}
+
 function ResourcesView() {
   const [filter, setFilter] = useState<'all' | 'pdf' | 'video' | 'audio'>('all');
+  const [selectedPremiumResource, setSelectedPremiumResource] = useState<any>(null);
   
   const filtered = RESOURCES.filter(r => filter === 'all' || r.type === filter);
 
+  // Divide into free and premium
+  const freeResources = filtered.filter(r => r.access === 'free');
+  const premiumResources = filtered.filter(r => r.access === 'premium');
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <header>
         <h2 className="text-2xl font-bold">Risorse & Guide</h2>
-        <p className="text-slate-500">Tutto il materiale formativo di Milo Everwood</p>
+        <p className="text-slate-500">Tutto il materiale formativo e multimediale di Milo Everwood</p>
       </header>
 
+      {/* Main Promo CTA Banner */}
+      <div className="bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 p-8 rounded-[2rem] text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="text-amber-300 shrink-0" size={16} />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Versione Freemium</span>
+          </div>
+          <h3 className="text-xl font-black tracking-tight leading-tight">Vuoi sbloccare tutto il materiale di Milo?</h3>
+          <p className="text-slate-300 text-sm max-w-xl font-medium leading-relaxed">
+            Alcuni contenuti sono disponibili gratuitamente per farti provare il Dog Kit. 
+            Il Kit completo sblocca tutti i contenuti premium attuali e futuri.
+          </p>
+        </div>
+        <button 
+          onClick={() => setSelectedPremiumResource({ title: 'Tutti i contenuti del Kit completo' })}
+          className="px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl transition-all shrink-0 shadow-lg font-bold text-sm tracking-tight flex items-center gap-2"
+        >
+          Sblocca il Kit completo
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
         {(['all', 'pdf', 'video', 'audio'] as const).map(f => (
           <button
@@ -964,39 +946,124 @@ function ResourcesView() {
               filter === f ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            {f === 'all' ? 'Tutte' : f.toUpperCase()}
+            {f === 'all' ? 'Tutte' : f === 'audio' ? 'PODCAST' : f.toUpperCase()}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filtered.map(res => (
-          <div key={res.id} className="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-lg transition-all flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                res.type === 'pdf' ? 'bg-red-50 text-red-600' : 
-                res.type === 'video' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'
-              }`}>
-                {res.type === 'pdf' && <BookOpen size={24} />}
-                {res.type === 'video' && <PlayCircle size={24} />}
-                {res.type === 'audio' && <Headphones size={24} />}
-              </div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{res.type}</span>
-            </div>
-            <h3 className="text-lg font-bold mb-2 leading-tight">{res.title}</h3>
-            <p className="text-sm text-slate-500 flex-1 mb-6 leading-relaxed">{res.description}</p>
-            <a 
-              href={res.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full py-3 bg-slate-50 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
-            >
-              {res.type === 'pdf' ? 'Scarica PDF' : res.type === 'video' ? 'Guarda Video' : 'Ascolta Audio'}
-              <ExternalLink size={16} />
-            </a>
+      {/* FREE SUB-SECTION */}
+      {freeResources.length > 0 && (
+        <div className="space-y-6">
+          <div className="border-b border-slate-150 pb-2">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <span>Contenuti inclusi gratis</span>
+              <span className="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-700 rounded-md">Inclusi</span>
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">Una piccola anteprima gratuita per provare il metodo Milo Everwood.</p>
           </div>
-        ))}
-      </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {freeResources.map(res => (
+              <div key={res.id} className="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                      res.type === 'pdf' ? 'bg-red-50 text-red-600' : 
+                      res.type === 'video' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'
+                    }`}>
+                      {res.type === 'pdf' && <BookOpen size={24} />}
+                      {res.type === 'video' && <PlayCircle size={24} />}
+                      {res.type === 'audio' && <Headphones size={24} />}
+                    </div>
+                    <ContentAccessBadge access="free" />
+                  </div>
+                  <h4 className="text-lg font-bold mb-2 leading-tight text-slate-900">{res.title}</h4>
+                  <p className="text-sm text-slate-500 mb-6 leading-relaxed">{res.description}</p>
+                </div>
+                
+                <a 
+                  href={res.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full py-3 bg-slate-50 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 text-sm border border-slate-100"
+                >
+                  {res.type === 'pdf' ? 'Scarica PDF' : res.type === 'video' ? 'Guarda Video' : 'Ascolta Audio'}
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* PREMIUM SUB-SECTION */}
+      {premiumResources.length > 0 && (
+        <div className="space-y-6 pt-4">
+          <div className="border-b border-slate-150 pb-2">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <span>Contenuti del Kit completo</span>
+              <span className="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-indigo-100 text-indigo-700 rounded-md flex items-center gap-0.5">
+                <Lock size={8} /> Premium
+              </span>
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">Acquista il Kit completo su Stan Store per accedere a tutti i contenuti premium attuali e futuri.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {premiumResources.map(res => (
+              <div 
+                key={res.id} 
+                onClick={() => setSelectedPremiumResource(res)}
+                className="bg-slate-50/70 hover:bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-lg transition-all flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-indigo-50 text-indigo-400 rounded-2xl flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                      {res.type === 'pdf' && <BookOpen size={24} />}
+                      {res.type === 'video' && <PlayCircle size={24} />}
+                      {res.type === 'audio' && <Headphones size={24} />}
+                    </div>
+                    <ContentAccessBadge access="premium" comingSoon={res.comingSoon} />
+                  </div>
+                  <h4 className="text-lg font-bold mb-2 leading-tight text-slate-700 group-hover:text-slate-900 transition-colors flex items-center gap-2">
+                    <span>{res.title}</span>
+                    {!res.comingSoon && <Lock size={14} className="text-indigo-400" />}
+                  </h4>
+                  <p className="text-sm text-slate-400 group-hover:text-slate-500 mb-6 leading-relaxed transition-colors">{res.description}</p>
+                </div>
+
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPremiumResource(res);
+                  }}
+                  className={`w-full py-3 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-sm border ${
+                    res.comingSoon 
+                    ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                    : 'bg-indigo-50 border-indigo-100 text-indigo-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 shadow-sm'
+                  }`}
+                >
+                  {res.comingSoon ? (
+                    <span>Prossimamente</span>
+                  ) : (
+                    <>
+                      <span>Sblocca su Stan Store</span>
+                      <ExternalLink size={14} />
+                    </>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={selectedPremiumResource !== null} 
+        onClose={() => setSelectedPremiumResource(null)} 
+        resource={selectedPremiumResource}
+      />
     </div>
   );
 }
@@ -1091,11 +1158,11 @@ function PlannerView({ items, setItems, notificationSettings, setNotificationSet
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Planner Settimanale</h2>
-          <p className="text-slate-500">Organizza la routine della settimana con i check</p>
+          <p className="text-slate-500">Organizza la settimana del tuo cane tra attività ricorrenti e promemoria personalizzati.</p>
         </div>
-        <button onClick={clearPlanner} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all w-fit">
+        <button onClick={clearPlanner} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all w-fit font-semibold text-sm">
           <RotateCcw size={18} />
-          <span className="font-semibold text-sm">Resetta Planner</span>
+          Resetta Planner
         </button>
       </div>
 
@@ -1133,9 +1200,16 @@ function PlannerView({ items, setItems, notificationSettings, setNotificationSet
               {items.map(item => (
                 <tr key={item.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
                   <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      {item.reminder && <Pill size={14} className="text-indigo-500" />}
-                      <span className={`font-bold text-slate-700 ${item.isFixed ? '' : 'text-indigo-600'}`}>{item.label}</span>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        {item.reminder && <Pill size={14} className="text-indigo-500" />}
+                        <span className={`font-bold text-slate-700 ${item.isFixed ? '' : 'text-indigo-600'}`}>{item.label}</span>
+                      </div>
+                      {(item.label.toLowerCase().includes('acqua') || item.label.toLowerCase().includes('pasto')) && (
+                        <span className="text-[10px] text-indigo-500 font-medium block mt-1">
+                          Questa attività può avere un promemoria dedicato.
+                        </span>
+                      )}
                     </div>
                   </td>
                   {days.map((_, idx) => (
@@ -1154,17 +1228,22 @@ function PlannerView({ items, setItems, notificationSettings, setNotificationSet
                   ))}
                   <td className="p-4 text-center">
                     {(item.label.toLowerCase().includes('acqua') || item.label.toLowerCase().includes('pasto')) && (
-                      <button 
-                        onClick={() => toggleNotification(item.label.toLowerCase().includes('acqua') ? 'water' : 'meal')}
-                        className={`p-2 rounded-lg transition-all ${
-                          isNotificationActive(item.label.toLowerCase().includes('acqua') ? 'water' : 'meal')
-                            ? 'bg-indigo-100 text-indigo-600'
-                            : 'bg-slate-50 text-slate-300 hover:text-indigo-400'
-                        }`}
-                        title="Attiva/Disattiva Notifica di Sistema"
-                      >
-                        <Bell size={18} />
-                      </button>
+                      <div className="flex items-center justify-center">
+                        <button 
+                          onClick={() => toggleNotification(item.label.toLowerCase().includes('acqua') ? 'water' : 'meal')}
+                          className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 border relative overflow-hidden group/btn ${
+                            isNotificationActive(item.label.toLowerCase().includes('acqua') ? 'water' : 'meal')
+                              ? 'bg-indigo-600 border-indigo-600 text-white font-bold shadow-md shadow-indigo-100'
+                              : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50 font-semibold'
+                          }`}
+                          title="Attiva promemoria"
+                        >
+                          <Bell size={14} />
+                          <span className="text-[10px] uppercase tracking-wider font-bold">
+                            {isNotificationActive(item.label.toLowerCase().includes('acqua') ? 'water' : 'meal') ? 'Attivo' : 'Attiva promemoria'}
+                          </span>
+                        </button>
+                      </div>
                     )}
                   </td>
                   <td className="p-4 text-center">
@@ -1262,8 +1341,21 @@ function FirstAidView() {
     <div className="space-y-8">
       <header>
         <h2 className="text-2xl font-bold">Primo Soccorso</h2>
-        <p className="text-slate-500">Numeri utili e procedure d'emergenza</p>
+        <p className="text-slate-500">In caso di urgenza, segui i passaggi con calma e contatta subito un professionista quando necessario.</p>
       </header>
+
+      {/* Prominent Warning Banner */}
+      <div className="bg-red-600 text-white p-6 rounded-[2rem] shadow-xl flex items-start gap-4">
+        <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+          <AlertTriangle size={28} className="text-red-100 animate-bounce" />
+        </div>
+        <div>
+          <h4 className="font-extrabold uppercase tracking-widest text-xs text-red-100 mb-1">Avviso di Emergenza</h4>
+          <p className="font-bold text-sm leading-relaxed">
+            In presenza di sintomi gravi, non aspettare: contatta immediatamente veterinario o pronto soccorso veterinario.
+          </p>
+        </div>
+      </div>
 
       {/* Emergency Numbers */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1330,8 +1422,14 @@ function FirstAidView() {
             <History size={20} className="text-emerald-600" />
             Kit di Pronto Soccorso
           </h3>
-          <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-            <p className="text-xs text-emerald-700 font-medium mb-4 uppercase tracking-wider">Cosa non deve mancare:</p>
+          <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 space-y-4">
+            <div>
+              <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider mb-1">Guida Kit</p>
+              <p className="text-xs text-emerald-800/80 leading-relaxed font-semibold">
+                Prepara in anticipo il tuo kit di emergenza per intervenire più rapidamente.
+              </p>
+            </div>
+            <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider pt-3 border-t border-emerald-200/50">Cosa non deve mancare:</p>
             <ul className="space-y-3">
               {kitItems.map((item, idx) => (
                 <li key={idx} className="flex items-center gap-3 text-sm text-emerald-800">
@@ -1377,23 +1475,51 @@ function NotificationsView({ settings, setSettings }: { settings: NotificationSe
     <div className="space-y-8">
       <header className="mb-10">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Centro Notifiche 🔔</h2>
-        <p className="text-slate-500 mt-1">Imposta i promemoria per non dimenticare mai le necessità del tuo cane.</p>
+        <p className="text-slate-500 mt-1">Imposta gli orari dei promemoria per acqua e alimentazione in base alla tua routine.</p>
       </header>
 
-      {permission !== 'granted' && (
-        <div className="bg-amber-50 border border-amber-200 p-6 rounded-3xl flex items-start gap-4">
+      {/* Permission Status Cards */}
+      {permission === 'default' && (
+        <div className="bg-amber-50 border border-amber-200 p-6 rounded-3xl flex items-start gap-4 shadow-sm animate-pulse">
           <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
             <ShieldAlert size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-amber-900">Notifiche disattivate</h3>
-            <p className="text-sm text-amber-700 mb-4">Per ricevere i promemoria sul tuo dispositivo, devi autorizzare le notifiche nel browser.</p>
+            <h3 className="font-bold text-amber-900 text-sm">Richiesta di autorizzazione</h3>
+            <p className="text-sm text-amber-700 mb-4 font-medium">Per ricevere i promemoria, il browser deve autorizzare le notifiche.</p>
             <button 
               onClick={requestPermission}
-              className="px-6 py-2 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700 transition-colors text-sm"
+              className="px-6 py-2.5 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700 transition-colors text-sm shadow-md shadow-amber-100"
             >
-              Attiva Notifiche
+              Abilita notifiche
             </button>
+            <p className="text-xs text-amber-600 mt-2">Ti chiederemo il permesso solo quando deciderai tu di attivarle.</p>
+          </div>
+        </div>
+      )}
+
+      {permission === 'granted' && (
+        <div className="bg-emerald-50 border border-emerald-200 p-6 rounded-3xl flex items-start gap-4 shadow-sm">
+          <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+            <CheckCircle2 size={20} />
+          </div>
+          <div>
+            <h3 className="font-bold text-emerald-900 text-sm">Dispositivo Collegato</h3>
+            <p className="text-sm text-emerald-700 font-semibold">Promemoria attivi su questo dispositivo.</p>
+          </div>
+        </div>
+      )}
+
+      {permission === 'denied' && (
+        <div className="bg-red-50 border border-red-200 p-6 rounded-3xl flex items-start gap-4 shadow-sm">
+          <div className="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center shrink-0">
+            <X size={20} />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-red-900 text-sm">Notifiche Bloccate</h3>
+            <p className="text-sm text-red-700 leading-relaxed font-semibold">
+              Le notifiche risultano bloccate dal browser. Puoi riattivarle dalle impostazioni del browser o del dispositivo.
+            </p>
           </div>
         </div>
       )}
@@ -1403,8 +1529,8 @@ function NotificationsView({ settings, setSettings }: { settings: NotificationSe
           <div key={setting.id} className={`p-6 rounded-3xl border transition-all ${setting.enabled ? 'bg-white border-indigo-200 shadow-md' : 'bg-slate-50 border-slate-200 opacity-70'}`}>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${setting.type === 'water' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
-                  {setting.type === 'water' ? <Volume2 size={24} /> : <Settings size={24} />}
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${setting.type === 'water' ? 'bg-blue-50 text-blue-500' : 'bg-orange-50 text-orange-500'}`}>
+                  {setting.type === 'water' ? <Droplet size={24} /> : <Utensils size={24} />}
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900">{setting.label}</h3>
@@ -1448,12 +1574,23 @@ function NotificationsView({ settings, setSettings }: { settings: NotificationSe
           <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
             <Info size={32} />
           </div>
-          <div>
-            <h3 className="text-xl font-bold mb-2">Come funzionano le notifiche?</h3>
-            <p className="text-white/80 leading-relaxed">
-              Le notifiche di sistema funzionano quando l'applicazione è aperta in una scheda del browser (anche in background). 
-              Assicurati di non chiudere completamente la scheda se desideri ricevere i promemoria puntuali per l'acqua e i pasti del tuo cane.
-            </p>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-bold mb-2">Come funzionano le notifiche?</h3>
+              <p className="text-white/80 leading-relaxed text-sm">
+                Le notifiche di sistema funzionano quando l'applicazione è aperta in una scheda del browser (anche in background). 
+                Assicurati di non chiudere completamente la scheda se desideri ricevere i promemoria puntuali per l'acqua e i pasti del tuo cane.
+              </p>
+            </div>
+            
+            <div className="pt-4 border-t border-white/20">
+              <h4 className="font-bold text-sm text-indigo-100 flex items-center gap-2 mb-1">
+                <ShieldAlert size={16} /> Nota per utenti Apple iPhone
+              </h4>
+              <p className="text-white/70 text-xs leading-relaxed">
+                Su iPhone alcune notifiche richiedono apertura dell’app dalla schermata Home come web app installata. Clicca sul tasto di condivisione di Safari e scegli "Aggiungi alla schermata Home" per garantire il funzionamento in background.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -1543,10 +1680,12 @@ function WelcomeView({ onStart }: { onStart: () => void }) {
           <Dog size={48} />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tighter text-slate-900">
-            Benvenuto in <span className="text-indigo-600">Milo Everwood</span>
+          <h1 className="text-4xl font-black tracking-tighter text-slate-900 leading-tight">
+            Benvenuto nel tuo spazio digitale per la cura quotidiana del cane.
           </h1>
-          <p className="text-xl font-medium text-slate-400">Digital Dog Care</p>
+          <p className="text-lg font-medium text-slate-500 mt-2">
+            Qui trovi organizzazione, supporto pratico e contenuti guidati per accompagnarti ogni giorno.
+          </p>
         </div>
       </div>
 
@@ -1564,6 +1703,7 @@ function WelcomeView({ onStart }: { onStart: () => void }) {
           <a href="mailto:mpfprosolution@gmail.com" className="text-indigo-600 font-bold hover:underline flex items-center gap-2">
             <Send size={16} /> mpfprosolution@gmail.com
           </a>
+          <p className="text-xs text-slate-400">Per assistenza tecnica o richieste sul prodotto puoi contattare mpfprosolution@gmail.com.</p>
         </div>
       </div>
 
@@ -1572,9 +1712,8 @@ function WelcomeView({ onStart }: { onStart: () => void }) {
           <ShieldAlert size={24} />
           <h3 className="font-bold uppercase tracking-widest text-sm">Nota Importante</h3>
         </div>
-        <p className="text-sm text-amber-800/80 leading-relaxed">
-          I contenuti presenti in questa app (testi, infografiche e suggerimenti) hanno scopo puramente informativo ed educativo. 
-          Milo Everwood non fornisce consulenze mediche o veterinarie. In caso di emergenza o dubbi sulla salute del tuo cane, consulta sempre un veterinario professionista.
+        <p className="text-sm text-amber-800/85 leading-relaxed">
+          Le informazioni presenti nell’app hanno finalità educativa e organizzativa e non sostituiscono il veterinario. In caso di emergenza o dubbi sulla salute del tuo cane, consulta sempre un veterinario professionista.
         </p>
       </div>
 
@@ -1608,7 +1747,7 @@ function WelcomeView({ onStart }: { onStart: () => void }) {
 
       <button 
         onClick={onStart}
-        className="w-full py-5 bg-indigo-600 text-white font-bold text-xl rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-3"
+        className="w-full py-5 bg-indigo-600 text-white font-bold text-xl rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 animate-pulse"
       >
         Ho capito e confermo <ChevronRight size={24} />
       </button>

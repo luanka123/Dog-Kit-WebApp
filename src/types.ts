@@ -54,4 +54,6 @@ export interface Resource {
   description: string;
   type: 'pdf' | 'video' | 'audio';
   url: string;
+  access?: 'free' | 'premium';
+  comingSoon?: boolean;
 }
