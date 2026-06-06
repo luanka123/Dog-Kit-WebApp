@@ -256,7 +256,7 @@ export default function App() {
           <div className="mt-auto pt-6 border-t border-slate-100">
             <div className="p-4 bg-slate-50 rounded-2xl">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Versione App</p>
-              <p className="text-xs font-bold text-slate-600">1.2.0 - Offline Mode</p>
+              <p className="text-xs font-bold text-slate-600">1.2.1 - PWA Premium Edition</p>
             </div>
           </div>
         </div>
