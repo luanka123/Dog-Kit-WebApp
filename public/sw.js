@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dogkit-cache-v1';
+const CACHE_NAME = 'dogkit-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -32,14 +32,35 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: prima cerca in cache, se non trovato va in rete e salva in cache
+// Fetch: strategia Cache-First per statici, Network-First per API
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Evita di cacheggiare le chiamate API di terze parti delicate o socket se presenti
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
 
+  // Strategia Network-First per le chiamate API o servizi esterni
+  if (url.pathname.includes('/api/') || url.origin !== self.location.origin) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          // Salva una copia dell'API fresca in cache per fallback offline
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Se la rete fallisce, prova a restituire una risposta precedentemente cacheata (fallback offline)
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Strategia Cache-First per risorse statiche (JS, CSS, HTML, Immagini)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -58,7 +79,7 @@ self.addEventListener('fetch', (event) => {
 
         return networkResponse;
       }).catch((err) => {
-        console.log('[Service Worker] Fetch failed, resource not in cache:', err);
+        console.log('[Service Worker] Fetch fallito per risorsa statica:', err);
       });
     })
   );
