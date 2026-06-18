@@ -2346,6 +2346,34 @@ function AcademyView({ isPremium, onUnlock, completedLessons, setCompletedLesson
         </div>
       </header>
 
+      {/* Banner per Richiesta Consulenza Privata 1-to-1 */}
+      <div className="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white rounded-[2rem] p-6 shadow-xl border border-indigo-500/20 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-amber-400 to-transparent"></div>
+        <div className="space-y-2 relative z-10 max-w-xl">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[9px] uppercase font-black rounded-full tracking-wider">
+              Novità ✨
+            </span>
+            <span className="text-slate-300 text-xs font-bold">Sessioni con Milo Everwood</span>
+          </div>
+          <h3 className="text-lg md:text-xl font-black tracking-tight text-amber-300">
+            Hai bisogno di supporto personalizzato? 🐾
+          </h3>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Ogni binomio cane-proprietario è un mondo a sé. Prenota una lezione privata di approfondimento 1-to-1 con il coach Milo Everwood a soli <strong>30-40€ / sessione</strong> per risolvere qualsiasi dubbio o comportamento complesso.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            const md = encodeURIComponent("Ciao Milo, vorrei richiedere una sessione di consulenza privata (30-40€) sul comportamento del mio cane!");
+            window.open(`https://wa.me/393270000000?text=${md}`, '_blank');
+          }}
+          className="relative z-10 px-5 py-3 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase rounded-2xl tracking-wider shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center justify-center gap-2 shrink-0 self-stretch md:self-auto text-center"
+        >
+          <span>Richiedi Consulenza Privata 📱</span>
+        </button>
+      </div>
+
       {/* Categoria & Cerca */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
