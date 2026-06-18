@@ -1,4 +1,4 @@
-export type Page = 'welcome' | 'home' | 'routine' | 'training' | 'planner' | 'shopping' | 'resources' | 'faq' | 'first-aid' | 'notifications';
+export type Page = 'welcome' | 'home' | 'routine' | 'training' | 'planner' | 'shopping' | 'resources' | 'faq' | 'first-aid' | 'notifications' | 'academy' | 'food' | 'growth' | 'gallery' | 'premium';
 
 export interface NotificationSetting {
   id: string;
