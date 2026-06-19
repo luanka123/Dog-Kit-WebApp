@@ -2387,8 +2387,8 @@ function AcademyView({ isPremium, onUnlock, completedLessons, setCompletedLesson
           />
         </div>
         
-        <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
-          {['Tutte', 'Fondamentali', 'Comandi', 'Problemi', 'Socialità'].map(cat => (
+        <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none max-w-full">
+          {['Tutte', ...LEZIONI_DATA.map(c => c.nome)].map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
