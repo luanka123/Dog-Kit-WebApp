@@ -76,6 +76,35 @@ import {
 import { RESOURCES, TRAINING_DAYS, FAQ_DATA } from './constants';
 import { LEZIONI_DATA } from './lessonsData';
 
+// --- Safe Notifications Compatibility Layer ---
+const safeGetNotificationPermission = (): NotificationPermission => {
+  if (typeof window !== 'undefined' && 'Notification' in window) {
+    return Notification.permission;
+  }
+  return 'default';
+};
+
+const safeRequestNotificationPermission = async (): Promise<NotificationPermission> => {
+  if (typeof window !== 'undefined' && 'Notification' in window) {
+    try {
+      return await Notification.requestPermission();
+    } catch (e) {
+      console.warn("Notification permission request failed", e);
+    }
+  }
+  return 'denied';
+};
+
+const safeSendNotification = (title: string, options?: NotificationOptions) => {
+  if (typeof window !== 'undefined' && 'Notification' in window && safeGetNotificationPermission() === 'granted') {
+    try {
+      new Notification(title, options);
+    } catch (e) {
+      console.warn("Notification display failed", e);
+    }
+  }
+};
+
 // Costanti di Monetizzazione centralizzate
 export const PREMIUM = {
   prezzo: 17,
@@ -200,8 +229,8 @@ export default function App() {
           const today = now.toDateString();
 
           if (lastNotifTime !== today) {
-            if (Notification.permission === 'granted') {
-              new Notification('Dog Kit Reminder 🐾', {
+            if (safeGetNotificationPermission() === 'granted') {
+              safeSendNotification('Dog Kit Reminder 🐾', {
                 body: `${setting.label}: È ora!`,
                 icon: 'https://picsum.photos/seed/dog/100/100'
               });
@@ -1635,8 +1664,8 @@ function PlannerView({ items, setItems, notificationSettings, setNotificationSet
     // Toggle the first notification of that type for simplicity in the planner view
     const setting = notificationSettings.find(s => s.type === type);
     if (setting) {
-      if (Notification.permission !== 'granted') {
-        Notification.requestPermission();
+      if (safeGetNotificationPermission() !== 'granted') {
+        safeRequestNotificationPermission();
       }
       setNotificationSettings(prev => prev.map(s => s.id === setting.id ? { ...s, enabled: !s.enabled } : s));
     }
@@ -1986,10 +2015,10 @@ function FirstAidView() {
 }
 
 function NotificationsView({ settings, setSettings }: { settings: NotificationSetting[], setSettings: React.Dispatch<React.SetStateAction<NotificationSetting[]>> }) {
-  const [permission, setPermission] = useState<NotificationPermission>(Notification.permission);
+  const [permission, setPermission] = useState<NotificationPermission>(safeGetNotificationPermission());
 
   const requestPermission = async () => {
-    const result = await Notification.requestPermission();
+    const result = await safeRequestNotificationPermission();
     setPermission(result);
   };
 
