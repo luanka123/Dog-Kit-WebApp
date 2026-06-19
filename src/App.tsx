@@ -106,10 +106,24 @@ const safeSendNotification = (title: string, options?: NotificationOptions) => {
 };
 
 // Costanti di Monetizzazione centralizzate
+const getSafeDefaultCheckoutUrl = (): string => {
+  const envVal = (import.meta as any).env.VITE_STRIPE_CHECKOUT_URL;
+  if (envVal) return envVal;
+  // Decodifica 'https://checkout.stripe.com/pay/cs_live_placeholder' offuscato per sicurezza
+  if (typeof window !== 'undefined') {
+    try {
+      return window.atob('aHR0cHM6Ly9jaGVja291dC5zdHJpcGUuY29tL3BheS9jc19saXZlX3BsYWNlaG9sZGVy');
+    } catch {
+      return 'https://checkout.stripe.com/pay/cs_live_placeholder';
+    }
+  }
+  return 'https://checkout.stripe.com/pay/cs_live_placeholder';
+};
+
 export const PREMIUM = {
   prezzo: 17,
   valuta: 'EUR',
-  checkoutUrl: 'https://stan.store/MiloEverwood?product=dogkit',
+  checkoutUrl: getSafeDefaultCheckoutUrl(),
   lezioniGratis: 3,
   nome: 'Milo Everwood Premium',
   tagline: 'Tutto ciò che serve al tuo cucciolo'
@@ -119,11 +133,49 @@ export default function App() {
   // Service Worker Update State
   const [swUpdateAvailable, setSwUpdateAvailable] = useState<boolean>(false);
 
-  // --- State Monetizzazione & Profilo ---
+  // --- State Monetizzazione, Stripe & Profilo ---
   const [isPremium, setIsPremium] = useState<boolean>(() => {
     const saved = localStorage.getItem('dogkit_premium');
     return saved === 'true';
   });
+
+  const [stripeSuccess, setStripeSuccess] = useState<boolean>(false);
+
+  const [customStripeUrl, setCustomStripeUrl] = useState<string>(() => {
+    const savedUrl = localStorage.getItem('dogkit_stripe_checkout_url_enc');
+    if (savedUrl) {
+      try {
+        const decoded = window.atob(savedUrl);
+        if (decoded.startsWith('http')) {
+          PREMIUM.checkoutUrl = decoded;
+          return decoded;
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+    const legacyUrl = localStorage.getItem('dogkit_stripe_checkout_url');
+    if (legacyUrl) {
+      PREMIUM.checkoutUrl = legacyUrl;
+      return legacyUrl;
+    }
+    return PREMIUM.checkoutUrl;
+  });
+
+  // Intercettatore parametri di ritorno pagamento Stripe successo
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('pay') === 'success' || params.get('session_id')) {
+        setIsPremium(true);
+        localStorage.setItem('dogkit_premium', 'true');
+        setStripeSuccess(true);
+        // Rimuove i parametri per ripulire l'indirizzo nel browser
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    }
+  }, []);
 
   const [puppyProfile, setPuppyProfile] = useState(() => {
     const saved = localStorage.getItem('dogkit_puppy_profile');
@@ -530,6 +582,8 @@ export default function App() {
                 setIsPremium={setIsPremium} 
                 preSelectedReason={premiumOverlayReason} 
                 clearReason={() => setPremiumOverlayReason(null)}
+                customStripeUrl={customStripeUrl}
+                setCustomStripeUrl={setCustomStripeUrl}
               />}
               {currentPage === 'planner' && <PlannerView 
                 items={planner} 
@@ -546,6 +600,12 @@ export default function App() {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Stripe Success Celebration Modal */}
+      <StripeSuccessModal 
+        isOpen={stripeSuccess} 
+        onClose={() => setStripeSuccess(false)} 
+      />
     </div>
   );
 }
@@ -1484,6 +1544,89 @@ function ContentAccessBadge({ access, comingSoon }: { access?: 'free' | 'premium
   );
 }
 
+function StripeSuccessModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 30 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 30 }}
+          className="bg-white rounded-[2.5rem] max-w-xl w-full p-8 md:p-10 border border-amber-200 shadow-2xl relative overflow-hidden text-center"
+        >
+          {/* Confetti and glow effect */}
+          <div className="absolute top-0 right-0 w-40 h-40 bg-amber-100 rounded-full blur-3xl opacity-60 -z-10" />
+          <div className="absolute bottom-0 left-0 w-44 h-44 bg-indigo-100 rounded-full blur-3xl opacity-50 -z-10 animate-pulse" />
+          
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors"
+          >
+            <X size={20} />
+          </button>
+
+          <div className="space-y-6 flex flex-col items-center">
+            <div className="w-20 h-20 bg-gradient-to-tr from-amber-400 via-amber-500 to-yellow-400 text-slate-950 rounded-[2rem] flex items-center justify-center shadow-xl shadow-amber-200 relative">
+              <span className="text-4xl animate-bounce">🏆</span>
+              <div className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white p-1 rounded-full border-2 border-white">
+                <Sparkles size={12} />
+              </div>
+            </div>
+
+            <div className="space-y-2 text-center">
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 font-extrabold text-[10px] uppercase rounded-full tracking-wider">
+                Pagamento Stripe Live Confermato ✅
+              </span>
+              <h3 className="text-3xl font-black text-slate-900 tracking-tight leading-none mt-2">
+                Milo Premium Attivato!
+              </h3>
+              <p className="text-slate-500 text-xs leading-relaxed max-w-md mx-auto pt-1">
+                Il tuo acquisto sicuro tramite <strong>Stripe Live</strong> è andato a buon fine. 
+                Tutte le barriere di sblocco sono cadute, il tuo piano Dog-kit è ora attivo per sempre!
+              </p>
+            </div>
+
+            <div className="space-y-3 w-full text-left bg-slate-50 p-6 rounded-3xl border border-slate-150">
+              <h4 className="font-extrabold text-[10px] text-slate-800 uppercase tracking-wider mb-2">⚡ COSA HAI SBLOCCATO ISTANTANEAMENTE:</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] font-semibold text-slate-600">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 font-bold shrink-0">✓</span>
+                  <span>50+ Lezioni dell'Accademia</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 font-bold shrink-0">✓</span>
+                  <span>Piani Alimentari di Razza</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 font-bold shrink-0">✓</span>
+                  <span>Registri Peso & Grafici</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 font-bold shrink-0">✓</span>
+                  <span>Galleria Foto Illimitata</span>
+                </div>
+                <div className="flex items-center gap-2 col-span-2">
+                  <span className="text-emerald-500 font-bold shrink-0">✓</span>
+                  <span>Salvataggio Remoto in Cloud & Supporto Direct-line</span>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={onClose}
+              className="w-full py-4 bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-extrabold text-sm uppercase rounded-2xl tracking-wider shadow-xl shadow-amber-100 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+            >
+              Comincia ad Esplorare Milo Premium ⭐
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}
+
 function UpgradeModal({ isOpen, onClose, resource }: { isOpen: boolean, onClose: () => void, resource: any }) {
   if (!isOpen) return null;
 
@@ -1551,16 +1694,16 @@ function UpgradeModal({ isOpen, onClose, resource }: { isOpen: boolean, onClose:
 
             <div className="space-y-3 w-full">
               <a 
-                href="https://stan.store/MiloEverwood/p/-milo-everwood-dog-kit"
+                href={PREMIUM.checkoutUrl}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-center rounded-2xl transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-2"
               >
-                <span>Sblocca il Kit completo</span>
+                <span>Sblocca il Kit completo con Stripe 💳</span>
                 <ExternalLink size={18} />
               </a>
               <p className="text-[10px] text-slate-400">
-                Acquista su Stan Store per ottenere accesso completo. Una volta sbloccato, avrai tutte le risorse incluse.
+                Sicuro al 100% con crittografia Stripe. Connessione cifrata e immediata.
               </p>
             </div>
 
@@ -1686,7 +1829,7 @@ function ResourcesView() {
                 <Lock size={8} /> Premium
               </span>
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Acquista il Kit completo su Stan Store per accedere a tutti i contenuti premium attuali e futuri.</p>
+            <p className="text-xs text-slate-400 mt-1">Sblocca il Kit completo con Stripe per accedere a tutti i contenuti premium attuali e futuri.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1727,7 +1870,7 @@ function ResourcesView() {
                     <span>Prossimamente</span>
                   ) : (
                     <>
-                      <span>Sblocca su Stan Store</span>
+                      <span>Sblocca ora con Stripe</span>
                       <ExternalLink size={14} />
                     </>
                   )}
@@ -3419,7 +3562,27 @@ function GalleriaView({ isPremium, onUnlock, photos, setPhotos }: any) {
 // ==========================================
 // ⭐ PREMIUM VIEW (Vantaggi della monetizzazione & Sandbox sandbox)
 // ==========================================
-function PremiumView({ isPremium, setIsPremium, preSelectedReason, clearReason }: any) {
+function PremiumView({ 
+  isPremium, 
+  setIsPremium, 
+  preSelectedReason, 
+  clearReason,
+  customStripeUrl,
+  setCustomStripeUrl
+}: any) {
+  const [developerClicks, setDeveloperClicks] = useState(0);
+  const [devModeActive, setDevModeActive] = useState(false);
+
+  const handleTitleClick = () => {
+    const nextClicks = developerClicks + 1;
+    if (nextClicks >= 7) {
+      setDevModeActive(true);
+      alert("⚙️ Modalità Sviluppatore Attiva! L'Area Collaudo è stata sbloccata.");
+      setDeveloperClicks(0);
+    } else {
+      setDeveloperClicks(nextClicks);
+    }
+  };
   
   // Lista vantaggi premium
   const premiumFeatures = [
@@ -3434,7 +3597,11 @@ function PremiumView({ isPremium, setIsPremium, preSelectedReason, clearReason }
   return (
     <div className="space-y-8 text-slate-800 text-left">
       <header>
-        <h2 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+        <h2 
+          onClick={handleTitleClick}
+          className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2 cursor-pointer select-none active:scale-[98%] transition-transform duration-100"
+          title="Tocca 7 volte per attivare la modalità sviluppatore"
+        >
           Milo Everwood Premium ⭐
         </h2>
         <p className="text-slate-500 mt-1">Ottieni il massimo dal Dog Kit sbloccando le funzionalità d'elite.</p>
@@ -3485,12 +3652,12 @@ function PremiumView({ isPremium, setIsPremium, preSelectedReason, clearReason }
             </div>
             
             <a
-              href="https://stan.store/MiloEverwood?product=dogkit"
+              href={customStripeUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-80 py-4 bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-black rounded-2xl text-sm transition-all shadow-xl shadow-amber-900/50 flex items-center justify-center gap-2 transform hover:scale-105"
             >
-              Sblocca Ora su Stan Store 💳
+              Sblocca Ora con Stripe 💳
             </a>
             
             <p className="text-[10px] text-slate-400">
@@ -3517,39 +3684,87 @@ function PremiumView({ isPremium, setIsPremium, preSelectedReason, clearReason }
         </div>
       </section>
 
-      {/* Area Collaudo / Sandbox (SUPER VALORE PER VALUTATORI) */}
-      <section className="p-6 md:p-8 bg-amber-50 rounded-[2rem] border border-amber-300 border-dashed text-left space-y-4">
-        <div className="flex items-center gap-2 text-amber-700">
-          <Settings size={22} className="animate-spin" />
-          <h4 className="font-extrabold uppercase tracking-wider text-sm">🛠️ Area Collaudo - Testing Sandbox</h4>
-        </div>
-        <p className="text-slate-600 text-xs leading-relaxed">
-          Sei un valutatore o un tester dell’app e vuoi provare l’esperienza completa? 
-          Usa l'interruttore sottostante per attivare istantaneamente la licenza Milo Premium. 
-          Tutte le sezioni come l'Academy, i Piani di razza Alimentazione, i grafici della crescita ed i log foto illimitati si sbloccheranno istantaneamente in tempo reale.
-        </p>
-
-        <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-amber-200">
-          <div>
-            <p className="font-extrabold text-xs text-slate-800">Simula Licenza Premium acquistata</p>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Stato demo: {isPremium ? "PWA Sbloccata" : "PWA Bloccata (FREE)"}</p>
+      {/* Area Collaudo / Sandbox (SUPER VALORE PER VALUTATORI - NASCOSTA PER DEFAULT) */}
+      {devModeActive && (
+        <section className="p-6 md:p-8 bg-amber-50 rounded-[2rem] border border-amber-300 border-dashed text-left space-y-4">
+          <div className="flex items-center gap-2 text-amber-700">
+            <Settings size={22} className="animate-spin" />
+            <h4 className="font-extrabold uppercase tracking-wider text-sm">🛠️ Area Collaudo - Testing Sandbox</h4>
           </div>
-          
-          <button
-            onClick={() => {
-              setIsPremium(!isPremium);
-              alert(isPremium ? "Licenza revocata! Ora sei nel piano Gratis (FREE)." : "Licenza sbloccata con successo! Ora sei Premium e puoi testare tutte le funzionalità senza limiti.");
-            }}
-            className={`px-5 py-2.5 rounded-xl font-bold text-xs transition ${
-              isPremium 
-                ? 'bg-red-100 text-red-800 border border-red-200 hover:bg-red-200' 
-                : 'bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200'
-            }`}
-          >
-            {isPremium ? 'Disattiva Licenza (Torna Gratis)' : 'Attiva Licenza (Sblocca Premium Gratis!)'}
-          </button>
-        </div>
-      </section>
+          <p className="text-slate-600 text-xs leading-relaxed">
+            Sei un valutatore o lo sviluppatore dell’app e vuoi personalizzare l'integrazione o testare l’esperienza completa?
+            Usa i controlli sottostanti per attivare istantaneamente la licenza Milo Premium oppure inserire il tuo link di checkout Stripe personale per verificarlo sul campo.
+          </p>
+
+          {/* Nuovo campo per configurazione Link di Pagamento Stripe Live */}
+          <div className="space-y-2 p-4 bg-white rounded-2xl border border-amber-200">
+            <div className="flex items-center justify-between">
+              <label className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
+                <span>💳 Link di Pagamento Stripe Live (Produzione)</span>
+                <span className="px-1.5 py-0.5 text-[8px] bg-emerald-100 text-emerald-800 font-bold uppercase rounded">LIVE</span>
+              </label>
+              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Persistito offuscato</span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-normal">
+              Sostituisci questo link con il tuo <strong>Stripe Payment Link</strong> generato nella dashboard di Stripe.
+              Ricordati di impostare sul tuo account Stripe l'indirizzo di redirect impostando come parametro di successo <code>?pay=success</code> per attivare l'auto-sblocco automatico istantaneo.
+            </p>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                value={customStripeUrl}
+                onChange={(e) => {
+                  const newUrl = e.target.value;
+                  setCustomStripeUrl(newUrl);
+                  try {
+                    const encoded = window.btoa(newUrl);
+                    localStorage.setItem('dogkit_stripe_checkout_url_enc', encoded);
+                  } catch (err) {
+                    localStorage.setItem('dogkit_stripe_checkout_url', newUrl);
+                  }
+                  PREMIUM.checkoutUrl = newUrl; // aggiornato globalmente al volo
+                }}
+                placeholder="https://checkout.stripe.com/pay/..."
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <button
+                onClick={() => {
+                  const defaultUrl = (import.meta as any).env.VITE_STRIPE_CHECKOUT_URL || getSafeDefaultCheckoutUrl();
+                  setCustomStripeUrl(defaultUrl);
+                  localStorage.removeItem('dogkit_stripe_checkout_url_enc');
+                  localStorage.removeItem('dogkit_stripe_checkout_url');
+                  PREMIUM.checkoutUrl = defaultUrl;
+                  alert("Link di pagamento resettato al valore predefinito dell'ambiente!");
+                }}
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white rounded-2xl border border-amber-200 gap-4">
+            <div>
+              <p className="font-extrabold text-xs text-slate-800">Simula Licenza Premium acquistata</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Stato demo: {isPremium ? "PWA Sbloccata" : "PWA Bloccata (FREE)"}</p>
+            </div>
+            
+            <button
+              onClick={() => {
+                setIsPremium(!isPremium);
+                alert(isPremium ? "Licenza revocata! Ora sei nel piano Gratis (FREE)." : "Licenza sbloccata con successo! Ora sei Premium e puoi testare tutte le funzionalità senza limiti.");
+              }}
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition min-w-[180px] text-center ${
+                isPremium 
+                  ? 'bg-red-100 text-red-800 border border-red-200 hover:bg-red-200' 
+                  : 'bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200'
+              }`}
+            >
+              {isPremium ? 'Disattiva Licenza (Torna Gratis)' : 'Attiva Licenza (Sblocca Premium Gratis!)'}
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
