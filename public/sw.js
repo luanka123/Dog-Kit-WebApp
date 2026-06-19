@@ -84,3 +84,10 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Listener per messaggi esterni (es. skipWaiting da React)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});

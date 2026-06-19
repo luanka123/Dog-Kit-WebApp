@@ -116,6 +116,9 @@ export const PREMIUM = {
 };
 
 export default function App() {
+  // Service Worker Update State
+  const [swUpdateAvailable, setSwUpdateAvailable] = useState<boolean>(false);
+
   // --- State Monetizzazione & Profilo ---
   const [isPremium, setIsPremium] = useState<boolean>(() => {
     const saved = localStorage.getItem('dogkit_premium');
@@ -211,6 +214,73 @@ export default function App() {
   });
 
   // --- Effects ---
+  // Monitoraggio per aggiornamenti del Service Worker (PWA)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      // 1. Controlla le registrazioni esistenti immediatamente
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((reg) => {
+          // Se c'è già un worker in attesa del skipWaiting
+          if (reg.waiting) {
+            setSwUpdateAvailable(true);
+          }
+
+          // Ascolta l'evento updatefound per rilevare nuovi deploy/aggiornamenti sw.js
+          reg.onupdatefound = () => {
+            const installingWorker = reg.installing;
+            if (installingWorker) {
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed') {
+                  // Se c'è già un controller attivo, significa che questo è un aggiornamento effettivo, non la prima installazione
+                  if (navigator.serviceWorker.controller) {
+                    setSwUpdateAvailable(true);
+                  }
+                }
+              };
+            }
+          };
+        });
+      }).catch(err => console.warn('[PWA] Impossibile recuperare PWA SW registration:', err));
+
+      // Ascolta il cambio di controller per l'aggiornamento immediato
+      const handleControllerChange = () => {
+        console.log('[PWA] Nuova versione attivata. Ricarica in corso...');
+      };
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+      return () => {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      };
+    }
+  }, []);
+
+  // Forza skipWaiting e ricarica della pagina
+  const handleUpdateApp = () => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        const waitingRegs = registrations.filter(r => r.waiting);
+        if (waitingRegs.length > 0) {
+          waitingRegs.forEach(reg => {
+            if (reg.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+          // Aspetta un breve momento prima di ricaricare per dare tempo a skipWaiting() di agire
+          setTimeout(() => {
+            window.location.reload();
+          }, 300);
+        } else {
+          // Se per qualche motivo nessun registro è in waiting, forza un reload completo bypassando cache
+          window.location.reload();
+        }
+      }).catch((e) => {
+        console.error('[PWA] Errore skipWaiting:', e);
+        window.location.reload();
+      });
+    } else {
+      window.location.reload();
+    }
+  };
+
   useEffect(() => {
     localStorage.setItem('dogkit_notifications', JSON.stringify(notificationSettings));
   }, [notificationSettings]);
@@ -423,6 +493,8 @@ export default function App() {
                 puppyProfile={puppyProfile}
                 setPuppyProfile={setPuppyProfile}
                 completedLessons={completedLessons}
+                swUpdateAvailable={swUpdateAvailable}
+                onUpdateApp={handleUpdateApp}
               />}
               {currentPage === 'welcome' && <WelcomeView onStart={() => {
                 localStorage.setItem('dogkit_welcome_seen', 'true');
@@ -480,7 +552,17 @@ export default function App() {
 
 // --- Sub-Views ---
 
-function HomeView({ routine, trainingProgress, onNavigate, isPremium, puppyProfile, setPuppyProfile, completedLessons }: any) {
+function HomeView({ 
+  routine, 
+  trainingProgress, 
+  onNavigate, 
+  isPremium, 
+  puppyProfile, 
+  setPuppyProfile, 
+  completedLessons,
+  swUpdateAvailable,
+  onUpdateApp
+}: any) {
   const completedRoutine = routine.filter((r: any) => r.completed).length;
 
   // --- State per il Cronometro Cucciolo ---
@@ -543,6 +625,41 @@ function HomeView({ routine, trainingProgress, onNavigate, isPremium, puppyProfi
 
   return (
     <div className="space-y-8">
+      {/* Banner di Aggiornamento del Service Worker (PWA New Deploy) */}
+      {swUpdateAvailable && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white rounded-[2rem] p-6 shadow-xl border border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden"
+        >
+          <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-amber-400 to-transparent"></div>
+          <div className="flex gap-4 items-center relative z-10 w-full sm:w-auto">
+            <span className="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0 text-2xl animate-bounce">
+              🚀
+            </span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 text-[9px] uppercase font-black rounded-full tracking-wider animate-pulse">
+                  Aggiornamento v2.0 ✨
+                </span>
+              </div>
+              <h4 className="text-base font-black tracking-tight text-amber-300">
+                Nuovo Aggiornamento Disponibile (55 Nuove Lezioni)!
+              </h4>
+              <p className="text-xs text-slate-300">
+                Clicca qui sotto per aggiornare istantaneamente il tuo percorso d'addestramento Dog-kit.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onUpdateApp}
+            className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase rounded-xl tracking-wider shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 shrink-0 relative z-10 text-center"
+          >
+            Aggiorna Ora il tuo Dog-kit 📱
+          </button>
+        </motion.div>
+      )}
+
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
         <div>
           <h2 className="text-3xl font-black tracking-tight text-slate-900">
