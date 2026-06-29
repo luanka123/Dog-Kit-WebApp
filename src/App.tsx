@@ -121,7 +121,7 @@ const getSafeDefaultCheckoutUrl = (): string => {
 };
 
 export const PREMIUM = {
-  prezzo: 17,
+  prezzo: 17.99,
   valuta: 'EUR',
   checkoutUrl: getSafeDefaultCheckoutUrl(),
   lezioniGratis: 3,
@@ -488,7 +488,7 @@ export default function App() {
               }`}
             >
               <Award size={20} className={isPremium ? 'text-yellow-100' : 'text-amber-100'} />
-              <span>{isPremium ? 'Milo Premium Attivo ⭐' : 'Passa a Premium — €17'}</span>
+              <span>{isPremium ? 'Milo Premium Attivo ⭐' : `Passa a Premium — €${PREMIUM.prezzo}`}</span>
               <span className="ml-auto">✨</span>
             </button>
 
@@ -3106,7 +3106,7 @@ function AlimentazioneView({ isPremium, onUnlock, puppyProfile }: any) {
                     })}
                     className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-black rounded-xl text-xs transition shadow-lg shadow-amber-200/50"
                   >
-                    🏆 Sblocca Milo Premium — €17
+                    🏆 Sblocca Milo Premium — €{PREMIUM.prezzo}
                   </button>
                   <button
                     onClick={() => {
@@ -3648,7 +3648,7 @@ function PremiumView({
 
           <div className="pt-4 flex flex-col items-center justify-center space-y-3">
             <div className="text-3xl font-black text-amber-300">
-              Solo €17 <span className="text-xs font-bold text-slate-400 line-through">€39.90</span>
+              Solo €{PREMIUM.prezzo} <span className="text-xs font-bold text-slate-400 line-through">€39.90</span>
             </div>
             
             <a
