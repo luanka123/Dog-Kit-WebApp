@@ -75,6 +75,9 @@ import {
 } from './types';
 import { RESOURCES, TRAINING_DAYS, FAQ_DATA } from './constants';
 import { LEZIONI_DATA } from './lessonsData';
+import SymptomChecker from './components/SymptomChecker';
+import HealthSection from './components/HealthSection';
+import { SYMPTOMS_DATA } from './data/symptoms';
 
 // --- Safe Notifications Compatibility Layer ---
 const safeGetNotificationPermission = (): NotificationPermission => {
@@ -187,6 +190,62 @@ export default function App() {
       targetWeight: '32.0'
     };
   });
+
+  // --- Gestione Multi-Cane, Triage & Salute ---
+  const [dogsList, setDogsList] = useState<any[]>(() => {
+    const saved = localStorage.getItem('dogkit_dogs_list');
+    if (saved) return JSON.parse(saved);
+    return [
+      {
+        id: 'dog_milo',
+        name: 'Milo',
+        breed: 'Golden Retriever',
+        dob: '2026-03-15',
+        weight: '8.5',
+        targetWeight: '32.0',
+        vetName: '',
+        vetPhone: '',
+        vetClinic: '',
+        healthEvents: [],
+        nextAppointmentDate: '',
+        nextVaccineDate: ''
+      }
+    ];
+  });
+
+  const [activeDogId, setActiveDogId] = useState<string>(() => {
+    const saved = localStorage.getItem('dogkit_active_dog_id');
+    return saved || 'dog_milo';
+  });
+
+  const [preSelectedSymptomId, setPreSelectedSymptomId] = useState<string | null>(null);
+  const [firstAidTab, setFirstAidTab] = useState<'symptoms' | 'procedures' | 'health'>('symptoms');
+
+  // Persistenza Dati Cani
+  useEffect(() => {
+    localStorage.setItem('dogkit_dogs_list', JSON.stringify(dogsList));
+  }, [dogsList]);
+
+  useEffect(() => {
+    localStorage.setItem('dogkit_active_dog_id', activeDogId);
+  }, [activeDogId]);
+
+  // Sincronizzazione: se puppyProfile cambia (es. da form), aggiorna dogsList
+  useEffect(() => {
+    setDogsList(prev => prev.map(dog => {
+      if (dog.id === activeDogId) {
+        return {
+          ...dog,
+          name: puppyProfile.name,
+          breed: puppyProfile.breed,
+          dob: puppyProfile.dob,
+          weight: puppyProfile.weight,
+          targetWeight: puppyProfile.targetWeight
+        };
+      }
+      return dog;
+    }));
+  }, [puppyProfile, activeDogId]);
 
   // Galleria locale (max 10 foto per free tier)
   const [photos, setPhotos] = useState<string[]>(() => {
@@ -559,6 +618,9 @@ export default function App() {
                 onUnlock={(reason: any) => { setPremiumOverlayReason(reason); setCurrentPage('premium'); }} 
                 completedLessons={completedLessons}
                 setCompletedLessons={setCompletedLessons}
+                setPreSelectedSymptomId={setPreSelectedSymptomId}
+                setFirstAidTab={setFirstAidTab}
+                setCurrentPage={setCurrentPage}
               />}
               {currentPage === 'food' && <AlimentazioneView 
                 isPremium={isPremium} 
@@ -590,9 +652,28 @@ export default function App() {
                 setItems={setPlanner} 
                 notificationSettings={notificationSettings}
                 setNotificationSettings={setNotificationSettings}
+                onNavigate={(page, tab) => {
+                  setCurrentPage(page as any);
+                  if (tab) {
+                    setFirstAidTab(tab);
+                  }
+                }}
               />}
               {currentPage === 'shopping' && <ShoppingView items={shopping} setItems={setShopping} />}
-              {currentPage === 'first-aid' && <FirstAidView />}
+              {currentPage === 'first-aid' && <FirstAidView 
+                isPremium={isPremium}
+                onUnlock={(reason: any) => { setPremiumOverlayReason(reason); setCurrentPage('premium'); }}
+                onNavigate={(page: any) => setCurrentPage(page)}
+                dogsList={dogsList}
+                setDogsList={setDogsList}
+                activeDogId={activeDogId}
+                setActiveDogId={setActiveDogId}
+                preSelectedSymptomId={preSelectedSymptomId}
+                clearPreSelectedSymptom={() => setPreSelectedSymptomId(null)}
+                firstAidTab={firstAidTab}
+                setFirstAidTab={setFirstAidTab}
+                setPuppyProfile={setPuppyProfile}
+              />}
               {currentPage === 'resources' && <ResourcesView />}
               {currentPage === 'faq' && <FaqView />}
               {currentPage === 'notifications' && <NotificationsView settings={notificationSettings} setSettings={setNotificationSettings} />}
@@ -1891,11 +1972,12 @@ function ResourcesView() {
   );
 }
 
-function PlannerView({ items, setItems, notificationSettings, setNotificationSettings }: { 
+function PlannerView({ items, setItems, notificationSettings, setNotificationSettings, onNavigate }: { 
   items: PlannerItem[], 
   setItems: React.Dispatch<React.SetStateAction<PlannerItem[]>>,
   notificationSettings: NotificationSetting[],
-  setNotificationSettings: React.Dispatch<React.SetStateAction<NotificationSetting[]>>
+  setNotificationSettings: React.Dispatch<React.SetStateAction<NotificationSetting[]>>,
+  onNavigate?: (page: string, tab?: 'symptoms' | 'procedures' | 'health') => void
 }) {
   const [newItemLabel, setNewItemLabel] = useState('');
   const [showReminderAlert, setShowReminderAlert] = useState(false);
@@ -2090,17 +2172,82 @@ function PlannerView({ items, setItems, notificationSettings, setNotificationSet
           Usa il planner per tenere traccia delle abitudini quotidiane del tuo cucciolo.
         </p>
       </div>
+
+      {/* Banner Urgenze: Problema o sintomi oggi? */}
+      <div className="bg-red-50 border border-red-150 p-6 rounded-[2rem] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+        <div className="space-y-1">
+          <h4 className="font-extrabold text-sm text-red-800 flex items-center gap-1.5">
+            <AlertCircle size={18} className="text-red-600 animate-pulse" />
+            Il tuo cane mostra sintomi insoliti oggi? 🩺
+          </h4>
+          <p className="text-xs text-red-700/85 leading-relaxed font-semibold">
+            Risolvi ogni dubbio con il **Symptom Checker & Triage**. Ricevi un semaforo di gravità e linee guida salvavita immediate.
+          </p>
+        </div>
+        <button 
+          onClick={() => {
+            if (onNavigate) {
+              onNavigate('first-aid', 'symptoms');
+            }
+          }}
+          className="px-4.5 py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md hover:shadow-lg hover:shadow-red-200 shrink-0 flex items-center gap-1.5"
+        >
+          Avvia Triage Rapido
+        </button>
+      </div>
     </div>
   );
 }
 
-function FirstAidView() {
+function FirstAidView({
+  isPremium,
+  onUnlock,
+  onNavigate,
+  dogsList,
+  setDogsList,
+  activeDogId,
+  setActiveDogId,
+  preSelectedSymptomId,
+  clearPreSelectedSymptom,
+  firstAidTab,
+  setFirstAidTab,
+  setPuppyProfile
+}: {
+  isPremium: boolean;
+  onUnlock: (reason: any) => void;
+  onNavigate: (page: string) => void;
+  dogsList: any[];
+  setDogsList: React.Dispatch<React.SetStateAction<any[]>>;
+  activeDogId: string;
+  setActiveDogId: (id: string) => void;
+  preSelectedSymptomId: string | null;
+  clearPreSelectedSymptom: () => void;
+  firstAidTab: 'symptoms' | 'procedures' | 'health';
+  setFirstAidTab: (tab: 'symptoms' | 'procedures' | 'health') => void;
+  setPuppyProfile: (profile: any) => void;
+}) {
   const [openAction, setOpenAction] = useState<string | null>(null);
 
+  const activeDog = dogsList.find(d => d.id === activeDogId) || dogsList[0];
+
   const emergencyNumbers = [
-    { label: 'Veterinario di Fiducia', value: '[Inserisci Numero]', icon: Phone, color: 'bg-emerald-50 text-emerald-600' },
-    { label: 'Pronto Soccorso 24h', value: '[Inserisci Numero]', icon: LifeBuoy, color: 'bg-red-50 text-red-600' },
-    { label: 'Centro Antiveleni', value: '02 66101029', icon: AlertTriangle, color: 'bg-orange-50 text-orange-600' },
+    { 
+      label: 'Veterinario di Fiducia 🩺', 
+      value: activeDog?.vetPhone 
+        ? `${activeDog.vetName || 'Clinica'}: ${activeDog.vetPhone}` 
+        : '[Tocca per configurare]', 
+      icon: Phone, 
+      color: 'bg-emerald-50 text-emerald-600',
+      onClick: () => {
+        if (!activeDog?.vetPhone) {
+          setFirstAidTab('health');
+        } else {
+          window.open(`tel:${activeDog.vetPhone}`);
+        }
+      }
+    },
+    { label: 'Pronto Soccorso 24h 🚨', value: 'Emergenza Locale', icon: LifeBuoy, color: 'bg-red-50 text-red-600', onClick: () => alert("Contatta il pronto soccorso h24 o la clinica veterinaria più vicina alla tua posizione!") },
+    { label: 'Centro Antiveleni 🧪', value: '02 66101029', icon: AlertTriangle, color: 'bg-orange-50 text-orange-600', onClick: () => window.open('tel:0266101029') },
   ];
 
   const actions = [
@@ -2162,114 +2309,193 @@ function FirstAidView() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h2 className="text-2xl font-bold">Primo Soccorso</h2>
-        <p className="text-slate-500">In caso di urgenza, segui i passaggi con calma e contatta subito un professionista quando necessario.</p>
+      {/* Intestazione */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            🚨 Primo Soccorso & Triage
+          </h2>
+          <p className="text-slate-500 text-sm font-semibold">Triage sintomi ultrarapido, cartella clinica digitale e guide d'emergenza.</p>
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="flex bg-slate-100 p-1 rounded-2xl gap-1 shrink-0 w-full md:w-auto shadow-sm border border-slate-200/50">
+          <button
+            onClick={() => setFirstAidTab('symptoms')}
+            className={`flex-1 md:flex-initial px-4 py-2.5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all ${
+              firstAidTab === 'symptoms'
+                ? 'bg-white text-indigo-700 shadow-md'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            Triage Sintomi
+          </button>
+          <button
+            onClick={() => setFirstAidTab('procedures')}
+            className={`flex-1 md:flex-initial px-4 py-2.5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all ${
+              firstAidTab === 'procedures'
+                ? 'bg-white text-indigo-700 shadow-md'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            Guide & Emergenze
+          </button>
+          <button
+            onClick={() => setFirstAidTab('health')}
+            className={`flex-1 md:flex-initial px-4 py-2.5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all ${
+              firstAidTab === 'health'
+                ? 'bg-white text-indigo-700 shadow-md'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            Cartella Salute
+          </button>
+        </div>
       </header>
 
-      {/* Prominent Warning Banner */}
-      <div className="bg-red-600 text-white p-6 rounded-[2rem] shadow-xl flex items-start gap-4">
-        <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
-          <AlertTriangle size={28} className="text-red-100 animate-bounce" />
-        </div>
-        <div>
-          <h4 className="font-extrabold uppercase tracking-widest text-xs text-red-100 mb-1">Avviso di Emergenza</h4>
-          <p className="font-bold text-sm leading-relaxed">
-            In presenza di sintomi gravi, non aspettare: contatta immediatamente veterinario o pronto soccorso veterinario.
-          </p>
-        </div>
-      </div>
+      {/* RENDER TAB SELEZIONATA */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={firstAidTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {firstAidTab === 'symptoms' && (
+            <SymptomChecker
+              isPremium={isPremium}
+              onUnlock={onUnlock}
+              onNavigate={onNavigate}
+              dogsList={dogsList}
+              activeDogId={activeDogId}
+              setActiveDogId={setActiveDogId}
+              onSwitchTab={setFirstAidTab}
+              preSelectedSymptomId={preSelectedSymptomId}
+              clearPreSelectedSymptom={clearPreSelectedSymptom}
+            />
+          )}
 
-      {/* Emergency Numbers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {emergencyNumbers.map((num, idx) => (
-          <div key={idx} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${num.color}`}>
-              <num.icon size={24} />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{num.label}</p>
-              <p className="font-bold text-slate-700">{num.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+          {firstAidTab === 'health' && (
+            <HealthSection
+              dogsList={dogsList}
+              setDogsList={setDogsList}
+              activeDogId={activeDogId}
+              setActiveDogId={setActiveDogId}
+              setPuppyProfile={setPuppyProfile}
+            />
+          )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Procedures */}
-        <div className="lg:col-span-2 space-y-4">
-          <h3 className="text-lg font-bold flex items-center gap-2">
-            <AlertCircle size={20} className="text-red-500" />
-            Procedure d'Emergenza
-          </h3>
-          <div className="space-y-3">
-            {actions.map(action => (
-              <div key={action.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <button 
-                  onClick={() => setOpenAction(openAction === action.id ? null : action.id)}
-                  className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
-                >
-                  <div>
-                    <p className="font-bold text-slate-800">{action.title}</p>
-                    <p className="text-xs text-slate-500">{action.description}</p>
-                  </div>
-                  <ChevronDown size={18} className={`text-slate-400 transition-transform ${openAction === action.id ? 'rotate-180' : ''}`} />
-                </button>
-                <AnimatePresence>
-                  {openAction === action.id && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-4 pb-4 border-t border-slate-50"
-                    >
-                      <ul className="mt-4 space-y-2">
-                        {action.steps.map((step, idx) => (
-                          <li key={idx} className="flex gap-3 text-sm text-slate-600">
-                            <span className="w-5 h-5 rounded-full bg-red-50 text-red-600 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{idx + 1}</span>
-                            {step}
-                          </li>
-                        ))}
-                      </ul>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+          {firstAidTab === 'procedures' && (
+            <div className="space-y-8">
+              {/* Prominent Warning Banner */}
+              <div className="bg-red-600 text-white p-6 rounded-[2rem] shadow-xl flex items-start gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                  <AlertTriangle size={28} className="text-red-100 animate-bounce" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold uppercase tracking-widest text-xs text-red-100 mb-1">Avviso di Emergenza</h4>
+                  <p className="font-bold text-sm leading-relaxed">
+                    In presenza di sintomi acuti o forte sofferenza, non attendere: contatta subito un pronto soccorso veterinario h24.
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Kit Checklist */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold flex items-center gap-2">
-            <History size={20} className="text-emerald-600" />
-            Kit di Pronto Soccorso
-          </h3>
-          <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 space-y-4">
-            <div>
-              <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider mb-1">Guida Kit</p>
-              <p className="text-xs text-emerald-800/80 leading-relaxed font-semibold">
-                Prepara in anticipo il tuo kit di emergenza per intervenire più rapidamente.
-              </p>
+              {/* Emergency Numbers */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {emergencyNumbers.map((num, idx) => (
+                  <button
+                    key={idx}
+                    onClick={num.onClick}
+                    className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4 text-left hover:border-indigo-300 hover:shadow-md transition-all active:scale-[98%]"
+                  >
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${num.color}`}>
+                      <num.icon size={24} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{num.label}</p>
+                      <p className="font-extrabold text-sm text-slate-700 mt-0.5 leading-tight">{num.value}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Procedures */}
+                <div className="lg:col-span-2 space-y-4">
+                  <h3 className="text-lg font-black text-slate-800 flex items-center gap-2 uppercase tracking-tight">
+                    <AlertCircle size={20} className="text-red-500 animate-pulse" />
+                    Manuale d'Urgenza Step-by-Step
+                  </h3>
+                  <div className="space-y-3">
+                    {actions.map(action => (
+                      <div key={action.id} className="bg-white rounded-[2rem] border border-slate-150 overflow-hidden shadow-sm hover:border-slate-300 transition-all">
+                        <button 
+                          onClick={() => setOpenAction(openAction === action.id ? null : action.id)}
+                          className="w-full p-5 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+                        >
+                          <div>
+                            <p className="font-extrabold text-slate-800 text-sm md:text-base leading-tight">{action.title}</p>
+                            <p className="text-xs text-slate-400 mt-0.5 leading-normal font-medium">{action.description}</p>
+                          </div>
+                          <ChevronDown size={18} className={`text-slate-400 transition-transform ${openAction === action.id ? 'rotate-180' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                          {openAction === action.id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="px-6 pb-6 border-t border-slate-100 bg-slate-50/50"
+                            >
+                              <ul className="mt-4 space-y-3">
+                                {action.steps.map((step, idx) => (
+                                  <li key={idx} className="flex gap-3 text-xs md:text-sm text-slate-600 font-medium">
+                                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">{idx + 1}</span>
+                                    <span>{step}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Kit Checklist */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-black text-slate-800 flex items-center gap-2 uppercase tracking-tight">
+                    <History size={20} className="text-emerald-600" />
+                    La Borsa del Pronto Soccorso
+                  </h3>
+                  <div className="bg-emerald-50/70 p-6 rounded-[2rem] border border-emerald-150 space-y-4">
+                    <div>
+                      <p className="text-xs text-emerald-800 font-extrabold uppercase tracking-wider mb-1">Guida al Kit</p>
+                      <p className="text-xs text-emerald-900 leading-relaxed font-semibold">
+                        Prepara in anticipo questo kit speciale a casa per poter agire d'inerzia in caso di urgenza biologica.
+                      </p>
+                    </div>
+                    <p className="text-xs text-emerald-800 font-extrabold uppercase tracking-wider pt-3 border-t border-emerald-200/50">Lista dei componenti essenziali:</p>
+                    <ul className="space-y-2.5">
+                      {kitItems.map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-3 text-xs font-semibold text-emerald-950">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="p-4 bg-white border border-slate-200 rounded-2xl text-[10px] text-slate-400 font-medium leading-normal">
+                    Queste indicazioni hanno uno scopo meramente informativo e non intendono formulare diagnosi o terapie senza riscontro clinico diretto del veterinario.
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider pt-3 border-t border-emerald-200/50">Cosa non deve mancare:</p>
-            <ul className="space-y-3">
-              {kitItems.map((item, idx) => (
-                <li key={idx} className="flex items-center gap-3 text-sm text-emerald-800">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="p-4 bg-white border border-slate-200 rounded-2xl">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Nota Importante</p>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Queste informazioni sono puramente indicative. In caso di emergenza, la priorità assoluta è contattare un veterinario professionista.
-            </p>
-          </div>
-        </div>
-      </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
@@ -2581,7 +2807,15 @@ function WelcomeView({ onStart }: { onStart: () => void }) {
 // ==========================================
 // 🎓 ACADEMY VIEW (50+ Addestramenti)
 // ==========================================
-function AcademyView({ isPremium, onUnlock, completedLessons, setCompletedLessons }: any) {
+function AcademyView({ 
+  isPremium, 
+  onUnlock, 
+  completedLessons, 
+  setCompletedLessons,
+  setPreSelectedSymptomId,
+  setFirstAidTab,
+  setCurrentPage
+}: any) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tutte');
   const [activeLesson, setActiveLesson] = useState<any | null>(null);
@@ -2892,6 +3126,38 @@ function AcademyView({ isPremium, onUnlock, completedLessons, setCompletedLesson
                     </div>
                   </div>
                 )}
+
+                {/* Scatola di Triage dinamico basato sul sintomo correlato a questa lezione */}
+                {(() => {
+                  const symptomLink = SYMPTOMS_DATA.find(s => s.relatedLessonId === activeLesson.id);
+                  if (symptomLink) {
+                    return (
+                      <div className="p-5 bg-red-50 border border-red-150 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 text-left">
+                        <div className="space-y-1">
+                          <p className="text-sm font-extrabold text-red-950 flex items-center gap-1.5 leading-tight">
+                            <AlertCircle size={16} className="text-red-600 animate-pulse shrink-0" />
+                            Il tuo cane presenta questo sintomo ({symptomLink.name})?
+                          </p>
+                          <p className="text-xs text-red-700/85 font-medium leading-relaxed">
+                            Controlla subito la gravità e le linee guida del Triage medico digitale.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setActiveLesson(null);
+                            if (setPreSelectedSymptomId) setPreSelectedSymptomId(symptomLink.id);
+                            if (setFirstAidTab) setFirstAidTab('symptoms');
+                            if (setCurrentPage) setCurrentPage('first-aid');
+                          }}
+                          className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-md hover:shadow-lg shrink-0 active:scale-95"
+                        >
+                          Apri Triage Medico
+                        </button>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {/* Footer lettore (Pulsante completamento) */}
