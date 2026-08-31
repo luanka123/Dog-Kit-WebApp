@@ -122,7 +122,7 @@
       </span>
       <span class="flex items-center gap-1.5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-        Pagamento unico 17€
+        Pagamento unico €. 17,00
       </span>
     </div>
   </section>
@@ -367,7 +367,7 @@
 
         <!-- Price Box -->
         <div class="my-6 flex items-baseline justify-center gap-2">
-          <span class="text-5xl sm:text-7xl font-black text-white tracking-tight">17€</span>
+          <span class="text-5xl sm:text-7xl font-black text-white tracking-tight">€. 17,00</span>
           <span class="text-slate-400 text-base sm:text-lg font-bold">/ pagamento unico</span>
         </div>
 
@@ -404,14 +404,29 @@
           </div>
         </div>
 
-        <!-- CTA in Price Section -->
-        <a href="https://buy.stripe.com/5kQaEW4cafTX5rpcnIeME09" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-lg uppercase tracking-wider shadow-xl glow-indigo transition-all transform hover:-translate-y-1">
-          <span>Sblocca Dog Kit a 17€ Ora</span>
+        <!-- STRIPE CONFIGURATION NOTE:
+             Configura Stripe Dashboard → Prodotti → Dog Kit → Payment Links:
+             - After payment → Redirect to URL: https://dog-kit-web-app.vercel.app/?paid=true
+             - Metadata: client_reference_id = dogkit
+        -->
+
+        <!-- STRIPE BUY BUTTON & DIRECT CTA -->
+        <div class="my-6 flex flex-col items-center justify-center min-h-[50px]">
+          <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+          <stripe-buy-button
+            buy-button-id="buy_btn_1UAJhPCO4FW4BXwqi5agf5Gu"
+            publishable-key="pk_live_51RMXCHCO4FW4BXwqlwjf3R8dy1YsWafpNirP9CTv2M9tnD6i2hCClmFtdmwRjHMkTkBo3YEbkgsV3ZFdYZLj31xD00yiGXd7Xd"
+          ></stripe-buy-button>
+        </div>
+
+        <!-- Direct CTA in Price Section -->
+        <a href="https://buy.stripe.com/5kQaEW4cafTX5rpcnIeME09?client_reference_id=dogkit" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-lg uppercase tracking-wider shadow-xl glow-indigo transition-all transform hover:-translate-y-1">
+          <span>Sblocca Dog Kit a 17€ Ora →</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </a>
 
-        <p class="mt-4 text-xs text-slate-400 font-medium">
-          Pagamento sicuro e crittografato • Accesso istantaneo subito dopo l'attivazione
+        <p class="text-xs text-gray-400 sm:text-slate-400 mt-3 font-medium">
+          Pagamento sicuro con Stripe • Accesso immediato dopo il pagamento
         </p>
 
       </div>
@@ -460,7 +475,7 @@
           Il pagamento è sicuro? Ci sono rinnovi o costi ricorrenti?
         </h3>
         <p class="text-slate-400 text-xs sm:text-sm leading-relaxed pl-7">
-          <strong>Il pagamento è 100% sicuro e protetto da crittografia bancaria standard (Stripe).</strong> Non esiste alcun tipo di abbonamento o canone mensile: paghi una sola volta 17€ ed hai accesso a vita a tutte le funzionalità premium e agli aggiornamenti futuri.
+          <strong>Il pagamento è 100% sicuro e protetto da crittografia bancaria standard (Stripe).</strong> Non esiste alcun tipo di abbonamento o canone mensile: paghi una sola volta €. 17,00 ed hai accesso a vita a tutte le funzionalità premium e agli aggiornamenti futuri.
         </p>
       </div>
 

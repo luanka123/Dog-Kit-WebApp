@@ -83,6 +83,7 @@ import { LEZIONI_DATA } from './lessonsData';
 import SymptomChecker from './components/SymptomChecker';
 import HealthSection from './components/HealthSection';
 import OnboardingModal, { UserAccount } from './components/OnboardingModal';
+import LandingPage from './components/LandingPage';
 import { SYMPTOMS_DATA } from './data/symptoms';
 
 // --- Safe Notifications Compatibility Layer ---
@@ -114,23 +115,19 @@ const safeSendNotification = (title: string, options?: NotificationOptions) => {
   }
 };
 
+// Configura Stripe Dashboard → Prodotti → Dog Kit → Payment Links:
+// - After payment → Redirect to URL: https://dog-kit-web-app.vercel.app/?paid=true
+// - Metadata: client_reference_id = dogkit
+
 // Costanti di Monetizzazione centralizzate
 const getSafeDefaultCheckoutUrl = (): string => {
-  const envVal = (import.meta as any).env.VITE_STRIPE_CHECKOUT_URL;
+  const envVal = (import.meta as any).env?.VITE_STRIPE_CHECKOUT_URL;
   if (envVal) return envVal;
-  // Decodifica 'https://checkout.stripe.com/pay/cs_live_placeholder' offuscato per sicurezza
-  if (typeof window !== 'undefined') {
-    try {
-      return window.atob('aHR0cHM6Ly9jaGVja291dC5zdHJpcGUuY29tL3BheS9jc19saXZlX3BsYWNlaG9sZGVy');
-    } catch {
-      return 'https://checkout.stripe.com/pay/cs_live_placeholder';
-    }
-  }
-  return 'https://checkout.stripe.com/pay/cs_live_placeholder';
+  return 'https://buy.stripe.com/5kQaEW4cafTX5rpcnIeME09?client_reference_id=dogkit';
 };
 
 export const PREMIUM = {
-  prezzo: 17.99,
+  prezzo: '17,00',
   valuta: 'EUR',
   checkoutUrl: getSafeDefaultCheckoutUrl(),
   lezioniGratis: 3,
@@ -143,9 +140,11 @@ export default function App() {
   const [swUpdateAvailable, setSwUpdateAvailable] = useState<boolean>(false);
 
   // --- State Monetizzazione, Stripe & Profilo ---
+  // Legge lo stato di sblocco da localStorage (dogkit_unlocked o dogkit_premium)
   const [isPremium, setIsPremium] = useState<boolean>(() => {
-    const saved = localStorage.getItem('dogkit_premium');
-    return saved === 'true';
+    const savedUnlocked = localStorage.getItem('dogkit_unlocked');
+    const savedPremium = localStorage.getItem('dogkit_premium');
+    return savedUnlocked === 'true' || savedPremium === 'true';
   });
 
   const [stripeSuccess, setStripeSuccess] = useState<boolean>(false);
@@ -171,17 +170,21 @@ export default function App() {
     return PREMIUM.checkoutUrl;
   });
 
-  // Intercettatore parametri di ritorno pagamento Stripe successo
+  // Intercettatore parametri di ritorno pagamento Stripe (?paid=true, ?pay=success, ?session_id=...)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('pay') === 'success' || params.get('session_id')) {
+      if (params.get('paid') === 'true' || params.get('pay') === 'success' || params.get('session_id')) {
         setIsPremium(true);
+        // Salva in localStorage per le sessioni future
+        localStorage.setItem('dogkit_unlocked', 'true');
         localStorage.setItem('dogkit_premium', 'true');
         setStripeSuccess(true);
-        // Rimuove i parametri per ripulire l'indirizzo nel browser
+        // Rimuove i parametri per ripulire l'indirizzo nel browser mantenendo l'esperienza fluida
         const newUrl = window.location.pathname + window.location.hash;
         window.history.replaceState({}, document.title, newUrl);
+      } else if (localStorage.getItem('dogkit_unlocked') === 'true' || localStorage.getItem('dogkit_premium') === 'true') {
+        setIsPremium(true);
       }
     }
   }, []);
@@ -576,6 +579,19 @@ export default function App() {
     </button>
   );
 
+  // --- Controllo Accesso: Mostra LandingPage di vendita ai visitatori non sbloccati ---
+  if (!isPremium) {
+    return (
+      <LandingPage 
+        onEnterApp={() => {
+          setIsPremium(true);
+          localStorage.setItem('dogkit_unlocked', 'true');
+          localStorage.setItem('dogkit_premium', 'true');
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex">
       {/* Sidebar Overlay */}
@@ -686,7 +702,7 @@ export default function App() {
               }`}
             >
               <Award size={18} className={isPremium ? 'text-yellow-100' : 'text-amber-100'} />
-              <span className="text-xs">{isPremium ? 'Milo Premium Attivo ⭐' : `Passa a Premium — €${PREMIUM.prezzo}`}</span>
+              <span className="text-xs">{isPremium ? 'Milo Premium Attivo ⭐' : `Passa a Premium — €.${PREMIUM.prezzo}`}</span>
               <span className="ml-auto text-xs">✨</span>
             </button>
 
@@ -3651,7 +3667,7 @@ function AlimentazioneView({ isPremium, onUnlock, puppyProfile }: any) {
                     })}
                     className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-black rounded-xl text-xs transition shadow-lg shadow-amber-200/50"
                   >
-                    🏆 Sblocca Milo Premium — €{PREMIUM.prezzo}
+                    🏆 Sblocca Milo Premium — €.{PREMIUM.prezzo}
                   </button>
                   <button
                     onClick={() => {
@@ -4193,7 +4209,7 @@ function PremiumView({
 
           <div className="pt-4 flex flex-col items-center justify-center space-y-3">
             <div className="text-3xl font-black text-amber-300">
-              Solo €{PREMIUM.prezzo} <span className="text-xs font-bold text-slate-400 line-through">€39.90</span>
+              Solo €.{PREMIUM.prezzo} <span className="text-xs font-bold text-slate-400 line-through">€. 39,90</span>
             </div>
             
             <a
@@ -4291,22 +4307,31 @@ function PremiumView({
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white rounded-2xl border border-amber-200 gap-4">
             <div>
               <p className="font-extrabold text-xs text-slate-800">Simula Licenza Premium acquistata</p>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Stato demo: {isPremium ? "PWA Sbloccata" : "PWA Bloccata (FREE)"}</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Stato: {isPremium ? "PWA Sbloccata (Accesso Completo)" : "Landing Page di Vendita"}</p>
             </div>
             
-            <button
-              onClick={() => {
-                setIsPremium(!isPremium);
-                alert(isPremium ? "Licenza revocata! Ora sei nel piano Gratis (FREE)." : "Licenza sbloccata con successo! Ora sei Premium e puoi testare tutte le funzionalità senza limiti.");
-              }}
-              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition min-w-[180px] text-center ${
-                isPremium 
-                  ? 'bg-red-100 text-red-800 border border-red-200 hover:bg-red-200' 
-                  : 'bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200'
-              }`}
-            >
-              {isPremium ? 'Disattiva Licenza (Torna Gratis)' : 'Attiva Licenza (Sblocca Premium Gratis!)'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (isPremium) {
+                    localStorage.removeItem('dogkit_unlocked');
+                    localStorage.removeItem('dogkit_premium');
+                    setIsPremium(false);
+                  } else {
+                    localStorage.setItem('dogkit_unlocked', 'true');
+                    localStorage.setItem('dogkit_premium', 'true');
+                    setIsPremium(true);
+                  }
+                }}
+                className={`px-5 py-2.5 rounded-xl font-bold text-xs transition min-w-[180px] text-center cursor-pointer ${
+                  isPremium 
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200' 
+                    : 'bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200'
+                }`}
+              >
+                {isPremium ? 'Torna alla Landing Page' : 'Sblocca App Completa'}
+              </button>
+            </div>
           </div>
         </section>
       )}
