@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dog Kit — Il Tuo Piano d'Azione per la Salute e l'Educazione del Tuo Cane</title>
+  <meta name="description" content="Il tuo cane sta male ORA. Sai cosa fare nei prossimi 10 minuti? Dog Kit è la guida pratica con Triage d'urgenza, pronto soccorso e academy di addestramento." />
+  
+  <!-- Favicon & PWA -->
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .glow-indigo {
+      box-shadow: 0 0 50px -10px rgba(79, 70, 229, 0.35);
+    }
+    .glow-amber {
+      box-shadow: 0 0 40px -10px rgba(245, 158, 11, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-600 selection:text-white min-h-screen flex flex-col justify-between">
+
+  <!-- Top Announcement Bar -->
+  <div class="bg-gradient-to-r from-indigo-900 via-indigo-700 to-violet-900 text-white text-xs sm:text-sm font-semibold py-2.5 px-4 text-center border-b border-indigo-500/30 flex items-center justify-center gap-2">
+    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <span>Accesso Istantaneo Web & Mobile • Nessun abbonamento mensile</span>
+  </div>
+
+  <!-- Header / Navigation -->
+  <header class="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
+    <a href="https://dog-kit-web-app.vercel.app/" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5" />
+          <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5" />
+          <path d="M8 14v.5" />
+          <path d="M16 14v.5" />
+          <path d="M11.25 16.25h1.5L12 17l-.75-.75Z" />
+          <path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444c0-1.061-.162-2.2-.493-3.309m-9.243-6.082A8.801 8.801 0 0 1 12 5c.78 0 1.5.108 2.161.306" />
+        </svg>
+      </div>
+      <div>
+        <span class="text-xl font-black tracking-tight text-white block leading-none">Dog Kit</span>
+        <span class="text-[10px] uppercase font-extrabold tracking-widest text-indigo-400">Guida & Pronto Soccorso</span>
+      </div>
+    </a>
+
+    <a href="https://dog-kit-web-app.vercel.app/" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all">
+      <span>Apri l'App</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </a>
+  </header>
+
+  <!-- 1. HERO SECTION -->
+  <section class="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-16 sm:py-20 text-center relative">
+    <!-- Background subtle glow -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-950/60 border border-red-500/40 text-red-300 text-xs font-extrabold uppercase tracking-wider mb-6">
+      <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+      Protocolli d'Azione Rapida per Cani
+    </div>
+
+    <h1 class="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.15] max-w-4xl mx-auto">
+      Il tuo cane sta male <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-amber-300 to-orange-400">ORA.</span><br />
+      Sai cosa fare nei prossimi <span class="underline decoration-indigo-500 underline-offset-8">10 minuti?</span>
+    </h1>
+
+    <p class="mt-6 text-base sm:text-xl text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed">
+      Non rischiare la vita del tuo cane improvvisando su Google o facendoti prendere dal panico. Ricevi subito le istruzioni chiare, il triage d'emergenza e l'addestramento pratico a portata di tocco.
+    </p>
+
+    <!-- Primary CTA -->
+    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+      <a href="https://dog-kit-web-app.vercel.app/" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-base uppercase tracking-wider shadow-lg glow-indigo transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3">
+        <span>Accedi a Dog Kit Adesso</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <!-- Trust Badges -->
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-slate-400">
+      <span class="flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+        Funziona istantaneamente da smartphone
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+        Nessuna installazione complessa
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+        Pagamento unico 17,99€
+      </span>
+    </div>
+  </section>
+
+  <!-- 2. PROBLEMA / AGITAZIONE -->
+  <section class="w-full bg-slate-900/80 border-y border-slate-800/80 py-16 sm:py-20">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
+      
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="text-red-400 font-extrabold text-xs uppercase tracking-widest block mb-2">Cosa succede senza un piano</span>
+        <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          Nei primi minuti critici, l'errore umano è il rischio più grande.
+        </h2>
+        <p class="mt-3 text-slate-400 text-sm sm:text-base font-medium">
+          Quando il cane vomita sostanze tossiche, ha spasmi, è letargico o non respira bene, ogni secondo perso riduce le probabilità di salvarlo.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        
+        <!-- Card 1: Panico e Paralisi -->
+        <div class="p-6 sm:p-7 rounded-3xl bg-slate-950 border border-red-900/30 hover:border-red-500/40 transition-all flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-red-950/60 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">1. Il panico che blocca le decisioni</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              Non sapere se un sintomo è un banale malessere o un'urgenza letale genera ansia paralizzante. Non sai cosa fare fisicamente nei primi istanti.
+            </p>
+          </div>
+          <span class="mt-4 text-xs font-bold text-red-400">Rischio: ritardo nell'intervento vitale</span>
+        </div>
+
+        <!-- Card 2: Ricerche a caso su Google -->
+        <div class="p-6 sm:p-7 rounded-3xl bg-slate-950 border border-red-900/30 hover:border-red-500/40 transition-all flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-red-950/60 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m9 9 4 4"/><path d="m13 9-4 4"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">2. Ricerche disperate e forum contraddittori</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              Cercare sintomi su Google porta a centinaia di risposte discordanti di proprietari non qualificati. Il tempo passa mentre leggi teorie prive di fondamento scientifico.
+            </p>
+          </div>
+          <span class="mt-4 text-xs font-bold text-red-400">Rischio: applicare manovre errate o pericolose</span>
+        </div>
+
+        <!-- Card 3: Rimedi "fai-da-te" letali -->
+        <div class="p-6 sm:p-7 rounded-3xl bg-slate-950 border border-red-900/30 hover:border-red-500/40 transition-all flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-red-950/60 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">3. Errori fatali nei primi 10 minuti</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              Indurre il vomito quando non si deve (es. ingestione di caustici), dare medicinali per uso umano tossici per il cane o muovere un cane traumatizzato in modo scorretto.
+            </p>
+          </div>
+          <span class="mt-4 text-xs font-bold text-red-400">Rischio: danni irreversibili all'apparato gastrointestinale</span>
+        </div>
+
+        <!-- Card 4: Corse inutili o ritardi fatali -->
+        <div class="p-6 sm:p-7 rounded-3xl bg-slate-950 border border-red-900/30 hover:border-red-500/40 transition-all flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-red-950/60 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v7c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">4. Vet d'urgenza a vuoto o quando è troppo tardi</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              Correre alla clinica d'urgenza notturna (spendendo 200€-400€ solo di apertura pratica) per un falso allarme, oppure aspettare ore per un'urgenza reale senza aver stabilizzato il cane.
+            </p>
+          </div>
+          <span class="mt-4 text-xs font-bold text-red-400">Rischio: conti salatissimi o arrivo tardivo</span>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 3. SEZIONE SOLUZIONE (COSA CONTIENE DOG KIT) -->
+  <section class="w-full max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+    
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <span class="text-indigo-400 font-extrabold text-xs uppercase tracking-widest block mb-2">La Soluzione Definitiva</span>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
+        Tutto ciò che serve per proteggere ed educare il tuo cane in una sola web app.
+      </h2>
+      <p class="mt-3 text-slate-400 text-sm sm:text-base font-medium">
+        Strutturata con precisione: accedi immediatamente ai contenuti gratuiti per testare la qualità e sblocca i protocolli salvavita completi.
+      </p>
+    </div>
+
+    <!-- Moduli Gratuiti vs Moduli Premium -->
+    <div class="space-y-8">
+      
+      <!-- Box 1: Moduli Gratuiti -->
+      <div class="p-6 sm:p-8 rounded-3xl bg-slate-900/60 border border-slate-800">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold uppercase tracking-wider">
+            Inclusi Gratuitamente
+          </span>
+          <h3 class="text-xl font-black text-white">Contenuti Introduttivi & Divulgativi</h3>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Modulo Free 1 -->
+          <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-white text-base">Video Disastri da Evitare</h4>
+              <p class="text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">
+                I 10 errori più frequenti e letali commessi dai padroni a casa, spiegati per prevenire incidenti domestici gravi.
+              </p>
+            </div>
+          </div>
+
+          <!-- Modulo Free 2 -->
+          <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-white text-base">Podcast di Etologia Canina</h4>
+              <p class="text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">
+                Approfondimenti audio per decifrare il linguaggio del corpo del cane, riconoscere i segnali di stress e calmanti prima dell'aggressione.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Box 2: Moduli Premium Completi -->
+      <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-indigo-950/60 to-slate-900/90 border-2 border-indigo-500/40 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div class="flex items-center gap-3">
+            <span class="px-3.5 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider">
+              ⭐ Moduli Premium Completi
+            </span>
+            <h3 class="text-xl sm:text-2xl font-black text-white">Il Kit Operativo per Ogni Emergenza</h3>
+          </div>
+          <span class="text-xs font-extrabold text-indigo-300">Accesso Completo a Vita</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+          
+          <!-- Premium 1: Pronto Soccorso & Triage -->
+          <div class="p-5 rounded-2xl bg-slate-950/90 border border-indigo-500/20 flex items-start gap-4">
+            <div class="w-11 h-11 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12"/><path d="M6 12h12"/><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-extrabold text-white text-base">Pronto Soccorso & Triage Digitale</h4>
+                <span class="text-[10px] bg-red-500/20 text-red-300 font-extrabold px-1.5 py-0.5 rounded">Salvavita</span>
+              </div>
+              <p class="text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">
+                Algoritmo a semaforo (Verde, Giallo, Rosso) con istruzioni punto per punto per intossicazioni, torsione gastrica, colpo di calore e ferite.
+              </p>
+            </div>
+          </div>
+
+          <!-- Premium 2: Comportamento -->
+          <div class="p-5 rounded-2xl bg-slate-950/90 border border-indigo-500/20 flex items-start gap-4">
+            <div class="w-11 h-11 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Z"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-white text-base">Gestione Comportamento & Ansia</h4>
+              <p class="text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">
+                Protocolli mirati per ansia da separazione, abbaio continuo, paura di temporali/botti e gestione dell'iperattività.
+              </p>
+            </div>
+          </div>
+
+          <!-- Premium 3: Addestramento -->
+          <div class="p-5 rounded-2xl bg-slate-950/90 border border-indigo-500/20 flex items-start gap-4">
+            <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-white text-base">Academy & Addestramento in 5 Min</h4>
+              <p class="text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">
+                Oltre 50 lezioni guidate con timer integrato per insegnare richiamo perfetto, condotta al guinzaglio senza tirare e comandi base.
+              </p>
+            </div>
+          </div>
+
+          <!-- Premium 4: Salute & Profilo -->
+          <div class="p-5 rounded-2xl bg-slate-950/90 border border-indigo-500/20 flex items-start gap-4">
+            <div class="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-white text-base">Salute, Peso & Cartella Clinica</h4>
+              <p class="text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">
+                Calcolatore del peso ideale, registro scadenze vaccini e antiparassitari con promemoria e storico clinico sempre pronto per il veterinario.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- 4. SEZIONE PREZZO & OFFERTA -->
+  <section class="w-full bg-slate-900/90 border-y border-slate-800 py-16 sm:py-24">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      
+      <div class="bg-gradient-to-b from-slate-950 to-indigo-950/50 rounded-3xl p-8 sm:p-12 border-2 border-indigo-500 shadow-2xl glow-indigo text-center relative overflow-hidden">
+        
+        <div class="inline-block px-4 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-black uppercase tracking-widest mb-4">
+          Offerta Accesso a Vita
+        </div>
+
+        <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
+          Un solo pagamento.<br class="hidden sm:block" /> Protezione per sempre.
+        </h2>
+
+        <p class="mt-3 text-slate-400 text-sm sm:text-base max-w-xl mx-auto font-medium">
+          Meno del costo di un sacco di crocchette per avere un piano d'emergenza, l'academy e la cartella clinica sempre con te.
+        </p>
+
+        <!-- Price Box -->
+        <div class="my-8 flex items-baseline justify-center gap-2">
+          <span class="text-5xl sm:text-7xl font-black text-white tracking-tight">17,99€</span>
+          <span class="text-slate-400 text-base sm:text-lg font-bold">/ pagamento unico</span>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-8">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+          Zero Abbonamenti Mensili • Zero Costi Nascosti
+        </div>
+
+        <!-- Bullets dei Vantaggi -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left max-w-2xl mx-auto mb-10 text-xs sm:text-sm">
+          <div class="flex items-center gap-3 text-slate-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><strong>Triage d'urgenza</strong> e pronto soccorso immediato</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><strong>50+ Lezioni</strong> pratiche di addestramento step-by-step</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><strong>Cartella clinica</strong>, vaccini e monitoraggio peso</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><strong>Video disastri</strong> e podcast etologici inclusi</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><strong>Accesso istantaneo</strong> su qualsiasi smartphone</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><strong>Tutti gli aggiornamenti</strong> futuri inclusi gratis</span>
+          </div>
+        </div>
+
+        <!-- CTA in Price Section -->
+        <a href="https://dog-kit-web-app.vercel.app/" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-lg uppercase tracking-wider shadow-xl glow-indigo transition-all transform hover:-translate-y-1">
+          <span>Sblocca Dog Kit a 17,99€ Ora</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+
+        <p class="mt-4 text-xs text-slate-400 font-medium">
+          Pagamento sicuro e crittografato • Accesso istantaneo subito dopo l'attivazione
+        </p>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. FAQ -->
+  <section class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+    
+    <div class="text-center max-w-xl mx-auto mb-12">
+      <span class="text-indigo-400 font-extrabold text-xs uppercase tracking-widest block mb-2">Domande Frequenti</span>
+      <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+        Tutto ciò che devi sapere
+      </h2>
+    </div>
+
+    <div class="space-y-4">
+      
+      <!-- FAQ 1 -->
+      <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800">
+        <h3 class="text-base sm:text-lg font-bold text-white mb-2 flex items-start gap-3">
+          <span class="text-indigo-400 font-black">Q.</span>
+          Serve scaricare un'app dall'App Store o Google Play?
+        </h3>
+        <p class="text-slate-400 text-xs sm:text-sm leading-relaxed pl-7">
+          <strong>No, non è necessario passare dagli store.</strong> Dog Kit è una moderna Progressive Web App (PWA): si apre immediatamente tramite browser da qualsiasi smartphone (iPhone o Android) e puoi salvarla con un solo tocco sulla tua schermata Home, funzionando esattamente come un'app nativa a tutto schermo.
+        </p>
+      </div>
+
+      <!-- FAQ 2 -->
+      <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800">
+        <h3 class="text-base sm:text-lg font-bold text-white mb-2 flex items-start gap-3">
+          <span class="text-indigo-400 font-black">Q.</span>
+          Dog Kit sostituisce il mio medico veterinario?
+        </h3>
+        <p class="text-slate-400 text-xs sm:text-sm leading-relaxed pl-7">
+          <strong>Assolutamente no.</strong> Dog Kit è progettato per guidarti nei primi minuti critici, fornirti un triage immediato di urgenza per capire quando correre in clinica e darti le indicazioni corrette per non peggiorare la situazione mentre contatti il veterinario. È il tuo manuale operativo d'emergenza ed educativo tascabile.
+        </p>
+      </div>
+
+      <!-- FAQ 3 -->
+      <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800">
+        <h3 class="text-base sm:text-lg font-bold text-white mb-2 flex items-start gap-3">
+          <span class="text-indigo-400 font-black">Q.</span>
+          Il pagamento è sicuro? Ci sono rinnovi o costi ricorrenti?
+        </h3>
+        <p class="text-slate-400 text-xs sm:text-sm leading-relaxed pl-7">
+          <strong>Il pagamento è 100% sicuro e protetto da crittografia bancaria standard (Stripe).</strong> Non esiste alcun tipo di abbonamento o canone mensile: paghi una sola volta 17,99€ ed hai accesso a vita a tutte le funzionalità premium e agli aggiornamenti futuri.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- 6. FOOTER CON CTA FINALE -->
+  <footer class="w-full bg-slate-950 border-t border-slate-800/80 pt-16 pb-12">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+      
+      <div class="max-w-2xl mx-auto mb-10">
+        <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          Non aspettare l'emergenza per chiederti cosa fare.
+        </h2>
+        <p class="mt-2 text-slate-400 text-sm font-medium">
+          Metti al sicuro il tuo cane oggi stesso con Dog Kit.
+        </p>
+        <div class="mt-6">
+          <a href="https://dog-kit-web-app.vercel.app/" class="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-base uppercase tracking-wider shadow-lg glow-indigo transition-all transform hover:-translate-y-0.5">
+            <span>Inizia Subito su Dog Kit</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="pt-8 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-300">Dog Kit</span>
+          <span>© 2026 • Tutti i diritti riservati.</span>
+        </div>
+
+        <div>
+          <span>Assistenza & Contatti: </span>
+          <a href="mailto:mpfprosolution@gmail.com" class="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2">
+            mpfprosolution@gmail.com
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+</body>
+</html>
