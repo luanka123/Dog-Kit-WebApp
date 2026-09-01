@@ -123,16 +123,16 @@ const safeSendNotification = (title: string, options?: NotificationOptions) => {
 const getSafeDefaultCheckoutUrl = (): string => {
   const envVal = (import.meta as any).env?.VITE_STRIPE_CHECKOUT_URL;
   if (envVal) return envVal;
-  return 'https://buy.stripe.com/eVq7sKeQOdLPdXV5ZkeME0a';
+  return 'https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b';
 };
 
 export const PREMIUM = {
-  prezzo: '4,99',
+  prezzo: '29,00',
   valuta: 'EUR',
   checkoutUrl: getSafeDefaultCheckoutUrl(),
   lezioniGratis: 3,
-  nome: 'Milo Everwood Premium',
-  tagline: 'Tutto ciò che serve al tuo cucciolo'
+  nome: 'Dog Kit Accesso a Vita',
+  tagline: 'Tutto ciò che serve per la salute del tuo cane'
 };
 
 export default function App() {
@@ -3061,29 +3061,24 @@ function WelcomeView({ onStart }: { onStart: () => void }) {
         </p>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="text-2xl font-bold text-center text-slate-800">Cosa dicono di noi 🐾</h3>
-        <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-4">
+        <h3 className="text-xl font-bold text-center text-slate-800">Perché Scegliere Dog Kit 🐾</h3>
+        <div className="grid grid-cols-1 gap-3">
           {[
-            { text: "Finalmente non dimentico le vaccinazioni di Luna! Dog Kit mi ha salvato 200€ di multe.", author: "Marco, proprietario di Luna (6 mesi)" },
-            { text: "Le lezioni di educazione sono chiarissime. Rex ora viene quando lo chiamo!", author: "Giulia, proprietaria di Rex (1 anno)" },
-            { text: "Condivido tutto con la dog-sitter in tempo reale. Tranquillità totale.", author: "Andrea, proprietario di Hugo (2 anni)" },
-            { text: "La sezione shopping è utilissima. Ho trovato tutti i prodotti migliori per la dieta di Oliver.", author: "Elena, proprietaria di Oliver (3 anni)" },
-            { text: "Finalmente un'app che capisce davvero le esigenze di chi ha un cucciolo. Il planner è la mia funzione preferita.", author: "Roberto, proprietario di Kira (4 mesi)" },
-            { text: "Le risorse audio sono fantastiche per rilassarsi insieme al proprio cane dopo una lunga giornata.", author: "Silvia, proprietaria di Maya (5 anni)" },
-            { text: "Il supporto tramite email è rapido e super competente. Mi hanno aiutato a configurare tutto in un attimo.", author: "Davide, proprietario di Toby (2 anni)" }
-          ].map((t, i) => (
+            { title: "Promemoria Puntuali", desc: "Non dimentichi mai più vaccini, pipette antiparassitarie o visite veterinarie." },
+            { title: "Cartella Clinica Condivisa", desc: "Tutti i dati sanitari e i referti sempre a portata di tocco per tutta la famiglia." },
+            { title: "Educazione & Benessere", desc: "Oltre 50 lezioni pratiche per un cane sereno ed educato ogni giorno." }
+          ].map((item, i) => (
             <motion.div 
               key={i}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative"
+              className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"
             >
-              <div className="text-amber-400 mb-2">⭐⭐⭐⭐⭐</div>
-              <p className="text-slate-600 italic mb-2">"{t.text}"</p>
-              <p className="text-slate-900 font-bold text-xs">— {t.author}</p>
+              <h4 className="text-slate-900 font-bold text-sm mb-1">✨ {item.title}</h4>
+              <p className="text-slate-600 text-xs leading-relaxed">{item.desc}</p>
             </motion.div>
           ))}
         </div>

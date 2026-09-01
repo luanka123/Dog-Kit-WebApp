@@ -41,7 +41,7 @@ export const WELCOME_EMAIL_TEMPLATE = {
             <td style="padding: 32px;">
               <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0;">Ciao ${name}, grazie per aver scelto Dog Kit!</h2>
               <p style="font-size: 15px; line-height: 1.6; color: #475569;">
-                Il tuo acquisto a vita di <strong>Dog Kit (4,99€ una tantum)</strong> è confermato con successo! Da questo momento hai accesso immediato e illimitato a tutte le funzionalità della web app.
+                Il tuo acquisto a vita di <strong>Dog Kit (29€ una tantum)</strong> è confermato con successo! Da questo momento hai accesso immediato e illimitato a tutte le funzionalità della web app.
               </p>
 
               <!-- Box Istruzioni di Accesso -->
@@ -100,7 +100,7 @@ Benvenuto in Dog Kit! 🐾
 
 Ciao ${name},
 
-Grazie per aver acquistato Dog Kit a vita (4,99€ una tantum)!
+Grazie per aver acquistato Dog Kit a vita (29€ una tantum)!
 Tutte le funzionalità premium sono ora sbloccate per te.
 
 COME ACCEDERE ALLA TUA APP:
