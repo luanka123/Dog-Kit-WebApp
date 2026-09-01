@@ -1,384 +1,701 @@
 <!DOCTYPE html>
-<html lang="it" class="scroll-smooth">
+<html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dog Kit — Non Dimenticare Mai Più un Vaccino del Tuo Cane | Offerta Lancio 29€ a Vita</title>
-  <meta name="description" content="Promemoria automatici per vaccini, antiparassitari e visite veterinarie. Cartella clinica digitale condivisa con tutta la famiglia. Offerta lancio limitata 29€ a vita." />
+  <title>Dog Kit — Gestisci la Salute del Tuo Cane | 29€ A Vita</title>
+  <meta name="description" content="Promemoria automatici per vaccini, cartella clinica digitale e tracciamento spese del cane. Offerta lancio 29€ a vita." />
   
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicon.png" />
-  
+  <!-- Favicon Emoji -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐕</text></svg>" />
+
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            brandGreen: {
-              500: '#10b981',
-              600: '#059669',
-              700: '#047857',
-            }
-          }
-        }
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #111827;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: #ffffff;
+      color: #111827;
+      line-height: 1.5;
+    }
+
+    /* Utilities */
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    /* Fixed Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #111827;
+      font-weight: 900;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .header-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #22c55e;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-btn:hover {
+      background-color: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    /* Buttons & Pulsing Animation */
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 440px;
+      background-color: #22c55e;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 1.15rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 18px 24px;
+      border-radius: 16px;
+      text-decoration: none;
+      box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.4);
+      transition: background-color 0.2s ease, transform 0.2s ease;
+      animation: ctaPulse 3s infinite ease-in-out;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-cta:hover {
+      background-color: #16a34a;
+      transform: scale(1.03);
+    }
+
+    @keyframes ctaPulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.02);
       }
     }
-  </script>
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
+
+    .micro-guarantee {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #6b7280;
+      font-weight: 500;
+      text-align: center;
     }
-    .cta-btn {
-      background-color: #10b981;
+
+    /* 1. Hero Section */
+    .hero {
+      padding-top: 36px;
+      padding-bottom: 48px;
+      text-align: center;
+    }
+
+    .social-proof-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background-color: #f3f4f6;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: #111827;
+      margin-bottom: 16px;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      line-height: 1.55;
+      color: #4b5563;
+      max-width: 600px;
+      margin: 0 auto 24px auto;
+    }
+
+    .bullet-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 0 auto 28px auto;
+      max-width: 480px;
+      text-align: left;
+    }
+
+    .bullet-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #1f2937;
+      background-color: #f9fafb;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #f3f4f6;
+    }
+
+    /* 2. Come Funziona (3 Passaggi) */
+    .section-how {
+      padding-top: 48px;
+      padding-bottom: 48px;
+      background-color: #f9fafb;
+      border-top: 1px solid #f3f4f6;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: #111827;
+      margin-bottom: 28px;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .step-card {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .step-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background-color: #111827;
       color: #ffffff;
-      transition: all 0.2s ease-in-out;
+      font-weight: 900;
+      font-size: 1rem;
+      border-radius: 10px;
+      flex-shrink: 0;
     }
-    .cta-btn:hover {
-      background-color: #059669;
-      transform: translateY(-2px);
-      box-shadow: 0 12px 24px -6px rgba(16, 185, 129, 0.35);
+
+    .step-content h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .step-content p {
+      font-size: 0.85rem;
+      color: #4b5563;
+      line-height: 1.45;
+    }
+
+    /* 3. Sezione Prezzo */
+    .section-pricing {
+      padding-top: 56px;
+      padding-bottom: 56px;
+      text-align: center;
+    }
+
+    .pricing-card {
+      background-color: #ffffff;
+      border: 2px solid #22c55e;
+      border-radius: 24px;
+      padding: 32px 20px;
+      max-width: 520px;
+      margin: 0 auto;
+      box-shadow: 0 12px 30px -10px rgba(34, 197, 94, 0.15);
+    }
+
+    .offer-tag {
+      display: inline-block;
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      font-weight: 900;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      margin-bottom: 14px;
+    }
+
+    .price-wrap {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .price-struck {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #9ca3af;
+      text-decoration: line-through;
+    }
+
+    .price-main {
+      font-size: 3.6rem;
+      font-weight: 900;
+      color: #111827;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .price-period {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #16a34a;
+      text-transform: uppercase;
+    }
+
+    .price-sub {
+      font-size: 0.88rem;
+      color: #4b5563;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    /* Contatore Visivo */
+    .counter-box {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .counter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1f2937;
+    }
+
+    .counter-spots {
+      color: #dc2626;
+      font-weight: 900;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background-color: #e5e7eb;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #22c55e;
+      border-radius: 9999px;
+      transition: width 0.6s ease;
+    }
+
+    .included-list {
+      list-style: none;
+      text-align: left;
+      margin: 0 auto 24px auto;
+      font-size: 0.88rem;
+      color: #374151;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-top: 1px solid #f3f4f6;
+      padding-top: 18px;
+    }
+
+    .included-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .included-list li span {
+      color: #16a34a;
+      font-weight: bold;
+    }
+
+    .stripe-note {
+      font-size: 0.78rem;
+      color: #6b7280;
+      margin-top: 14px;
+    }
+
+    /* 4. FAQ */
+    .section-faq {
+      padding-top: 48px;
+      padding-bottom: 48px;
+      background-color: #f9fafb;
+      border-top: 1px solid #f3f4f6;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px 18px;
+      text-align: left;
+    }
+
+    .faq-q {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .faq-a {
+      font-size: 0.85rem;
+      color: #4b5563;
+      line-height: 1.45;
+    }
+
+    /* 5. Footer */
+    footer {
+      padding: 24px 20px;
+      border-top: 1px solid #f3f4f6;
+      text-align: center;
+      font-size: 0.78rem;
+      color: #9ca3af;
+      margin-top: auto;
+    }
+
+    footer a {
+      color: #9ca3af;
+      text-decoration: none;
+      margin-left: 8px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Desktop Breakpoints */
+    @media (min-width: 640px) {
+      h1 {
+        font-size: 2.8rem;
+      }
+      .hero-sub {
+        font-size: 1.15rem;
+      }
+      .steps-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .bullet-list {
+        flex-direction: row;
+        max-width: 100%;
+        justify-content: center;
+      }
+      .bullet-item {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+      }
     }
   </style>
 </head>
-<body class="bg-white text-slate-900 antialiased selection:bg-emerald-500 selection:text-white min-h-screen flex flex-col justify-between">
+<body>
 
-  <!-- 1. HEADER -->
-  <header class="w-full max-w-5xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between border-b border-slate-100">
-    <a href="https://dog-kit-web-app.vercel.app/" class="flex items-center gap-2.5 group">
-      <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-xl shadow-xs">
-        🐶
+  <!-- 1. HEADER FISSO -->
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <a href="#pricing" class="brand">
+          <span class="brand-icon">🐕</span>
+          <span>Dog Kit</span>
+        </a>
+        <a href="https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b" target="_blank" rel="noopener noreferrer" class="header-btn">
+          ACQUISTA — 29€
+        </a>
       </div>
-      <div>
-        <span class="text-xl font-black tracking-tight text-slate-900 block leading-none">Dog Kit</span>
-        <span class="text-[11px] uppercase font-bold tracking-wider text-slate-500">Salute & Prevenzione</span>
-      </div>
-    </a>
-
-    <div>
-      <a 
-        href="https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b" 
-        class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl cta-btn font-bold text-xs sm:text-sm shadow-sm"
-      >
-        ACQUISTA ORA — 29€ A VITA
-      </a>
     </div>
   </header>
 
-  <!-- 2. HERO SECTION -->
-  <section class="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-20 text-center">
-    
-    <!-- Social Proof Reale -->
-    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs sm:text-sm font-semibold mb-6">
-      <span>🐾 Già gestendo la salute di <strong>1.250 cani</strong> con Dog Kit</span>
-    </div>
-
-    <!-- H1 Richiesta -->
-    <h1 class="text-3xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.15] max-w-3xl mx-auto">
-      Non Dimenticare Mai Più un Vaccino del Tuo Cane
-    </h1>
-
-    <!-- Subheadline Richiesta -->
-    <p class="mt-5 text-base sm:text-xl text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed">
-      Promemoria automatici per vaccini, antiparassitari e visite veterinarie. Cartella clinica digitale condivisa con tutta la famiglia.
-    </p>
-
-    <!-- Urgenza Banner Pill -->
-    <div class="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs sm:text-sm font-bold">
-      <span>🔥 OFFERTA LANCIO LIMITATA — 29€ A VITA (Prezzo normale <span class="line-through text-slate-400">149€</span>)</span>
-    </div>
-
-    <!-- CTA UNICO & GARANZIA -->
-    <div class="mt-8 flex flex-col items-center justify-center gap-3 max-w-md mx-auto">
-      <a 
-        href="https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b" 
-        class="w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-2xl cta-btn font-black text-lg sm:text-xl uppercase tracking-wider shadow-lg cursor-pointer"
-        aria-label="Acquista Dog Kit a 29 euro a vita"
-      >
-        <span>ACQUISTA ORA — 29€ A VITA</span>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-      </a>
-
-      <!-- Sotto CTA -->
-      <p class="text-xs sm:text-sm text-slate-500 font-medium text-center">
-        🔒 Pagamento sicuro Stripe. Garanzia 14 giorni soddisfatti o rimborsati.
-      </p>
-    </div>
-
-    <!-- Quick Features Mini Bar -->
-    <div class="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-medium">
-      <span class="flex items-center gap-1.5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-        Funziona su iPhone, Android & PC
-      </span>
-      <span class="flex items-center gap-1.5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-        Condivisione in famiglia in tempo reale
-      </span>
-      <span class="flex items-center gap-1.5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-        Accesso a vita senza abbonamento
-      </span>
-    </div>
-  </section>
-
-  <!-- 3. 3 CARDS BENEFICI -->
-  <section class="w-full bg-slate-50 border-y border-slate-100 py-16 sm:py-20 px-4 sm:px-6">
-    <div class="max-w-5xl mx-auto">
-      
-      <div class="text-center max-w-xl mx-auto mb-12">
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
-          Tutto ciò di cui hai bisogno per la salute del tuo cane
-        </h2>
-        <p class="mt-2 text-slate-600 text-sm sm:text-base">
-          Progettato per semplificare la cura quotidiana e non farti mai più dimenticare una scadenza medica.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <main>
+    <!-- 2. HERO SECTION -->
+    <section class="hero">
+      <div class="container">
         
-        <!-- Card 1 -->
-        <div class="p-7 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div>
-            <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl mb-5">
-              🗓️
+        <!-- Social Proof Reale -->
+        <div class="social-proof-pill">
+          <span>🐕 Sii tra i primi 50 utenti a provare Dog Kit. La tua opinione conta.</span>
+        </div>
+
+        <!-- H1 -->
+        <h1>Non Dimenticare Mai Più un Vaccino del Tuo Cane</h1>
+
+        <!-- Subheadline -->
+        <p class="hero-sub">
+          Promemoria automatici per vaccini, antiparassitari e visite veterinarie. Cartella clinica digitale condivisa con tutta la famiglia.
+        </p>
+
+        <!-- 3 Bullet point -->
+        <div class="bullet-list">
+          <div class="bullet-item">
+            <span>✅ Promemoria automatici per vaccini e scadenze</span>
+          </div>
+          <div class="bullet-item">
+            <span>✅ Cartella clinica digitale condivisibile</span>
+          </div>
+          <div class="bullet-item">
+            <span>✅ Tracciamento peso, spese e sintomi</span>
+          </div>
+        </div>
+
+        <!-- CTA UNICO GRANDE VERDE -->
+        <div>
+          <a href="https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b" target="_blank" rel="noopener noreferrer" class="btn-cta">
+            ACQUISTA ORA — 29€ A VITA
+          </a>
+          <p class="micro-guarantee">
+            Garanzia 14 giorni soddisfatti o rimborsati. Nessuna domanda.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. COME FUNZIONA (3 PASSAGGI) -->
+    <section class="section-how">
+      <div class="container">
+        <h2 class="section-title">Come funziona</h2>
+        
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Aggiungi il cane</h3>
+              <p>Inserisci nome, data di nascita e dati base del tuo cucciolo in 30 secondi.</p>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Promemoria Vaccini & Antiparassitari</h3>
-            <p class="text-slate-600 text-sm leading-relaxed">
-              Calcolo automatico dei richiami per vaccini obbligatori, pipette antiparassitarie, collari, vermifughi e visite periodiche.
-            </p>
           </div>
-          <div class="mt-6 pt-4 border-t border-slate-100 text-xs font-semibold text-slate-500">
-            ✓ Notifiche puntuali prima della scadenza
-          </div>
-        </div>
 
-        <!-- Card 2 -->
-        <div class="p-7 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div>
-            <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl mb-5">
-              📋
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Inserisci le scadenze</h3>
+              <p>Registra vaccini, pipette antiparassitarie o controlli programmati dal veterinario.</p>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Cartella Clinica Digitale Completa</h3>
-            <p class="text-slate-600 text-sm leading-relaxed">
-              Registra anamnesi, peso, interventi, allergie e farmaci assunti. Esporta la scheda sanitaria in PDF con un clic per il veterinario.
-            </p>
           </div>
-          <div class="mt-6 pt-4 border-t border-slate-100 text-xs font-semibold text-slate-500">
-            ✓ Storico medico sempre a portata di mano
-          </div>
-        </div>
 
-        <!-- Card 3 -->
-        <div class="p-7 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div>
-            <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl mb-5">
-              👨‍👩‍👧
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>L'app ti avvisa lei</h3>
+              <p>Ricevi promemoria puntuali e sincronizzati con tutta la famiglia.</p>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Condivisione con Tutta la Famiglia</h3>
-            <p class="text-slate-600 text-sm leading-relaxed">
-              Sincronizza le schede con partner, figli o dog sitter per sapere esattamente chi ha somministrato le cure, i pasti e le passeggiate.
-            </p>
-          </div>
-          <div class="mt-6 pt-4 border-t border-slate-100 text-xs font-semibold text-slate-500">
-            ✓ Aggiornamento istantaneo su ogni dispositivo
           </div>
         </div>
 
       </div>
+    </section>
 
-    </div>
-  </section>
+    <!-- 4. SEZIONE PREZZO -->
+    <section id="pricing" class="section-pricing">
+      <div class="container">
+        
+        <div class="pricing-card">
+          <div class="offer-tag">OFFERTA LANCIO LIMITATA</div>
+          
+          <div class="price-wrap">
+            <span class="price-struck">149€</span>
+            <span class="price-main">29€</span>
+            <span class="price-period">A VITA</span>
+          </div>
 
-  <!-- 4. SEZIONE PREZZO CON CONTATORE JS -->
-  <section id="pricing" class="w-full max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-    
-    <div class="text-center max-w-xl mx-auto mb-8">
-      <span class="text-xs font-black uppercase tracking-wider text-slate-500 block mb-1">Accesso Permanente</span>
-      <h2 class="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight">
-        OFFERTA LANCIO LIMITATA — 29€ A VITA
-      </h2>
-      <p class="mt-2 text-slate-600 text-sm sm:text-base">
-        Solo per i primi 50 acquirenti. Prezzo normale <span class="line-through text-slate-400 font-semibold">149€</span>. Nessun canone mensile.
-      </p>
-    </div>
+          <p class="price-sub">
+            Solo per i primi 50 acquirenti. Poi il prezzo torna a 149€.
+          </p>
 
-    <!-- Pricing Card -->
-    <div class="p-8 sm:p-10 rounded-3xl bg-white border-2 border-slate-200 shadow-xl text-center relative">
-      
-      <div class="inline-block px-3.5 py-1 rounded-full bg-slate-100 text-slate-800 font-bold text-xs mb-3">
-        PAGAMENTO UNICO UNA TANTUM
-      </div>
+          <!-- Contatore Visivo JS -->
+          <div class="counter-box">
+            <div class="counter-header">
+              <span>Disponibilità offerta lancio:</span>
+              <span>Posti rimasti: <span id="spots-count" class="counter-spots">47</span> / 50</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="spots-bar" class="progress-bar-fill" style="width: 94%;"></div>
+            </div>
+          </div>
 
-      <!-- Prezzo -->
-      <div class="flex items-center justify-center gap-3 my-2">
-        <span class="text-2xl sm:text-3xl line-through text-slate-400 font-bold">149€</span>
-        <span class="text-5xl sm:text-6xl font-black text-slate-950">29€</span>
-        <span class="text-xs font-extrabold uppercase bg-slate-100 text-slate-800 px-2.5 py-1 rounded-lg">A Vita</span>
-      </div>
+          <ul class="included-list">
+            <li><span>✓</span> Tutti i moduli inclusi (Salute, Spese, Vaccini)</li>
+            <li><span>✓</span> Aggiornamenti a vita senza costi extra</li>
+            <li><span>✓</span> Nessun abbonamento mensile</li>
+            <li><span>✓</span> Supporto prioritario via email</li>
+          </ul>
 
-      <!-- Contatore Visivo con JavaScript che scende -->
-      <div class="mt-6 max-w-md mx-auto p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left">
-        <div class="flex items-center justify-between text-xs font-bold mb-2">
-          <span class="text-slate-700 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span>
-            Disponibilità limitata
-          </span>
-          <span class="text-slate-900 bg-white px-2.5 py-1 rounded-md border border-slate-200">
-            Posti rimasti: <strong id="spots-count" class="text-slate-950 text-sm">47</strong> / 50
-          </span>
+          <a href="https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b" target="_blank" rel="noopener noreferrer" class="btn-cta">
+            ACQUISTA ORA — 29€ A VITA
+          </a>
+
+          <p class="micro-guarantee">
+            Garanzia 14 giorni soddisfatti o rimborsati. Nessuna domanda.
+          </p>
+
+          <p class="stripe-note">
+            🔒 Pagamento sicuro con Stripe. Accesso immediato dopo l'acquisto.
+          </p>
         </div>
-        <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-          <div id="spots-bar" class="h-full rounded-full transition-all duration-700" style="width: 94%; background-color: #10b981;"></div>
+
+      </div>
+    </section>
+
+    <!-- 5. SEZIONE FAQ (3 DOMANDE CORTE) -->
+    <section class="section-faq">
+      <div class="container">
+        <h2 class="section-title">Domande Frequenti</h2>
+
+        <div class="faq-list">
+          <div class="faq-item">
+            <div class="faq-q">Funziona su iPhone e Android?</div>
+            <div class="faq-a">Sì, è una web app. Funziona su tutti i dispositivi senza scaricare nulla.</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">Cosa succede dopo l'acquisto?</div>
+            <div class="faq-a">Ricevi accesso immediato via email. Entro 60 secondi.</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">Posso avere un rimborso?</div>
+            <div class="faq-a">Sì, entro 14 giorni. Scrivici e ti rimborsiamo in 24 ore, senza domande.</div>
+          </div>
         </div>
-        <p class="mt-2 text-[11px] text-slate-500 font-medium">
-          ⚡ Quando i 50 posti saranno esauriti, il prezzo tornerà a 149€.
-        </p>
+
       </div>
-
-      <!-- Lista Vantaggi -->
-      <ul class="mt-8 space-y-3 text-xs sm:text-sm text-left text-slate-700 border-t border-slate-100 pt-6 max-w-md mx-auto">
-        <li class="flex items-center gap-2.5">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-          <span><strong>Cartella clinica completa</strong> per tutti i cani della famiglia</span>
-        </li>
-        <li class="flex items-center gap-2.5">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-          <span><strong>Promemoria automatici</strong> per vaccini, visite e antiparassitari</span>
-        </li>
-        <li class="flex items-center gap-2.5">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-          <span><strong>Sincronizzazione in tempo reale</strong> con partner o dog sitter</span>
-        </li>
-        <li class="flex items-center gap-2.5">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-          <span><strong>Esportazione PDF immediata</strong> per le visite veterinarie</span>
-        </li>
-        <li class="flex items-center gap-2.5">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-          <span><strong>Tutti gli aggiornamenti futuri inclusi</strong> per sempre</span>
-        </li>
-      </ul>
-
-      <!-- CTA Principale -->
-      <div class="mt-8">
-        <a 
-          href="https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b" 
-          class="w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-2xl cta-btn font-black text-lg sm:text-xl uppercase tracking-wider shadow-lg cursor-pointer"
-        >
-          <span>ACQUISTA ORA — 29€ A VITA</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>
-        <p class="mt-3 text-xs sm:text-sm text-slate-500 font-medium">
-          🔒 Pagamento sicuro Stripe. Garanzia 14 giorni soddisfatti o rimborsati.
-        </p>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- 5. 3 FAQ -->
-  <section class="w-full max-w-3xl mx-auto px-4 sm:px-6 py-14 sm:py-16">
-    <div class="text-center max-w-xl mx-auto mb-10">
-      <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
-        Domande Frequenti
-      </h2>
-    </div>
-
-    <div class="space-y-4">
-      
-      <!-- FAQ 1 -->
-      <div class="p-6 rounded-2xl bg-white border border-slate-200">
-        <h3 class="text-base font-bold text-slate-900 mb-2">
-          Cosa include l'offerta a 29€ a vita?
-        </h3>
-        <p class="text-slate-600 text-sm leading-relaxed">
-          Con un unico pagamento di 29€ (invece di 149€) ottieni accesso illimitato a vita a tutte le funzionalità di Dog Kit: promemoria per scadenze mediche, cartella clinica per tutti i tuoi cani, sincronizzazione in famiglia ed esportazione PDF senza alcun abbonamento futuro.
-        </p>
-      </div>
-
-      <!-- FAQ 2 -->
-      <div class="p-6 rounded-2xl bg-white border border-slate-200">
-        <h3 class="text-base font-bold text-slate-900 mb-2">
-          Come funziona la garanzia di rimborso in 14 giorni?
-        </h3>
-        <p class="text-slate-600 text-sm leading-relaxed">
-          Garanzia 14 giorni soddisfatti o rimborsati. Nessuna domanda. Se l'app non soddisfa le tue esigenze, ti basta inviarci un'email entro 14 giorni dall'acquisto e ti rimborseremo tempestivamente l'intero importo del 100%.
-        </p>
-      </div>
-
-      <!-- FAQ 3 -->
-      <div class="p-6 rounded-2xl bg-white border border-slate-200">
-        <h3 class="text-base font-bold text-slate-900 mb-2">
-          Funziona su iPhone, Android e computer?
-        </h3>
-        <p class="text-slate-600 text-sm leading-relaxed">
-          Sì! Dog Kit è una moderna web app installabile compatibile con tutti gli smartphone iOS (iPhone), Android, tablet e computer. Non serve scaricare app pesanti dagli store e tutti i tuoi dati rimangono sempre sincronizzati.
-        </p>
-      </div>
-
-    </div>
-  </section>
+    </section>
+  </main>
 
   <!-- 6. FOOTER MINIMALE -->
-  <footer class="w-full bg-white border-t border-slate-100 py-10 mt-auto">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-      <div class="flex items-center gap-2 font-medium">
-        <span class="font-bold text-slate-900">Dog Kit</span>
-        <span>© 2026 • Tutti i diritti riservati.</span>
-      </div>
-
-      <div class="flex items-center gap-1 font-medium">
-        <span>Assistenza:</span>
-        <a href="mailto:mpfprosolution@gmail.com" class="text-slate-800 hover:text-slate-950 underline underline-offset-2">
-          mpfprosolution@gmail.com
-        </a>
-      </div>
+  <footer>
+    <div class="container">
+      <span>© 2026 Dog Kit</span>
+      <a href="mailto:mpfprosolution@gmail.com">Privacy & Assistenza</a>
     </div>
   </footer>
 
-  <!-- SCRIPT CONTO ALLA ROVESCIA POSTI (SIMULAZIONE DINAMICA) -->
+  <!-- 8. FUNZIONALITÀ JS (CONTATORE SIMULATO REALISTICO) -->
   <script>
     (function() {
-      // Inizializza o recupera lo stato dei posti rimasti
-      const STORAGE_KEY = 'dogkit_spots_left_v1';
-      let spots = parseInt(localStorage.getItem(STORAGE_KEY) || '47', 10);
-      
-      // Assicura che non scenda sotto una soglia minima realistica per l'offerta lancio (es. 41)
-      if (isNaN(spots) || spots > 47 || spots < 41) {
-        spots = 47;
+      // Calcolo decremento realistico ogni 2.5 ore a partire da una data base
+      const BASE_TIMESTAMP = 1756742400000; // riferimento temporale
+      const MS_PER_STEP = 2.5 * 60 * 60 * 1000; // ogni 2.5 ore
+      const START_SPOTS = 47;
+      const MIN_SPOTS = 7;
+
+      function calculateRemainingSpots() {
+        const now = Date.now();
+        const elapsedSteps = Math.floor(Math.max(0, now - BASE_TIMESTAMP) / MS_PER_STEP);
+        
+        // Simula decremento da 47 verso il basso
+        let spots = START_SPOTS - (elapsedSteps % 40);
+        if (spots < MIN_SPOTS) spots = MIN_SPOTS;
+        return spots;
       }
 
-      function updateSpotsUI(val) {
+      function updateUI() {
+        const spots = calculateRemainingSpots();
         const countEl = document.getElementById('spots-count');
         const barEl = document.getElementById('spots-bar');
-        if (countEl) countEl.textContent = val;
+        
+        if (countEl) countEl.textContent = spots;
         if (barEl) {
-          const percentage = (val / 50) * 100;
+          const percentage = Math.round((spots / 50) * 100);
           barEl.style.width = percentage + '%';
         }
       }
 
-      updateSpotsUI(spots);
-
-      // Simula una riduzione progressiva realistica dopo un tempo casuale
-      const nextDropDelay = Math.floor(Math.random() * 25000) + 18000; // tra 18s e 43s
-      setTimeout(() => {
-        if (spots > 42) {
-          spots -= 1;
-          localStorage.setItem(STORAGE_KEY, spots.toString());
-          updateSpotsUI(spots);
-        }
-      }, nextDropDelay);
+      updateUI();
     })();
   </script>
 

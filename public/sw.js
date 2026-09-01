@@ -1,29 +1,32 @@
-const CACHE_NAME = 'dogkit-cache-v2';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'dogkit-cache-v3';
+const OFFLINE_FALLBACK_URL = '/index.html';
+
+const STATIC_ASSETS_TO_PRECACHE = [
   '/',
   '/index.html',
+  '/manifest.json',
   '/favicon.png',
-  '/manifest.json'
+  '/landing.html'
 ];
 
 // Installa il Service Worker e pre-cachea i file principali
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Pre-caching offline assets');
-      return cache.addAll(ASSETS_TO_CACHE);
+      console.log('[Service Worker] Pre-caching offline app shell & assets');
+      return cache.addAll(STATIC_ASSETS_TO_PRECACHE);
     }).then(() => self.skipWaiting())
   );
 });
 
-// Attivazione: elimina le vecchie cache
+// Attivazione: elimina le vecchie cache e prende il controllo immediato
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
+            console.log('[Service Worker] Pulizia vecchia cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -32,62 +35,75 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: strategia Cache-First per statici, Network-First per API
+// Fetch: Gestione offline totale per SPA (Stale-While-Revalidate per script/stili e Cache-First per statici)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Strategia Network-First per le chiamate API o servizi esterni
-  if (url.pathname.includes('/api/') || url.origin !== self.location.origin) {
+  // Per navigazione pagine (HTML SPA): Network-first con fallback istantaneo su cache offline
+  if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .then((networkResponse) => {
-          // Salva una copia dell'API fresca in cache per fallback offline
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
           }
-          return networkResponse;
+          return response;
         })
-        .catch(() => {
-          // Se la rete fallisce, prova a restituire una risposta precedentemente cacheata (fallback offline)
-          return caches.match(event.request);
+        .catch(async () => {
+          console.log('[Service Worker] Offline: fornitura cache HTML');
+          const cachedResponse = await caches.match(event.request);
+          if (cachedResponse) return cachedResponse;
+          return caches.match(OFFLINE_FALLBACK_URL);
         })
     );
     return;
   }
 
-  // Strategia Cache-First per risorse statiche (JS, CSS, HTML, Immagini)
+  // Risorse esterne (es. Google Fonts o CDN): Cache-First
+  if (url.origin.includes('fonts.googleapis.com') || url.origin.includes('fonts.gstatic.com') || url.origin.includes('lucide')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((networkRes) => {
+          if (networkRes && networkRes.status === 200) {
+            const clone = networkRes.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkRes;
+        });
+      })
+    );
+    return;
+  }
+
+  // Risorse statiche interne (JS, CSS, Immagini, icone): Stale-While-Revalidate
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
           return networkResponse;
-        }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        })
+        .catch((err) => {
+          // In modalità offline, se non c'è rete ma la risorsa è in cache, non c'è errore bloccante
+          return cachedResponse;
         });
 
-        return networkResponse;
-      }).catch((err) => {
-        console.log('[Service Worker] Fetch fallito per risorsa statica:', err);
-      });
+      return cachedResponse || fetchPromise;
     })
   );
 });
 
-// Listener per messaggi esterni (es. skipWaiting da React)
+// Listener per messaggi di skipWaiting o salvataggio dati
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
+

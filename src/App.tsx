@@ -203,7 +203,12 @@ export default function App() {
   // --- Gestione Multi-Cane, Triage & Salute ---
   const [dogsList, setDogsList] = useState<any[]>(() => {
     const saved = localStorage.getItem('dogkit_dogs_list');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
     return [
       {
         id: 'dog_milo',
@@ -226,6 +231,67 @@ export default function App() {
     const saved = localStorage.getItem('dogkit_active_dog_id');
     return saved || 'dog_milo';
   });
+
+  const [showDogDropdown, setShowDogDropdown] = useState<boolean>(false);
+  const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  // Monitoraggio connettività offline / online
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Rilevamento dispositivo iOS (iPhone / iPad)
+  const isIOSDevice = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }, []);
+
+  // Fallback Email per Notifiche & Promemoria (ideale per iOS)
+  const [emailFallback, setEmailFallback] = useState<{
+    enabled: boolean;
+    email: string;
+    sentLogs: { id: string; timestamp: string; title: string; body: string }[];
+  }>(() => {
+    const saved = localStorage.getItem('dogkit_email_fallback');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return {
+      enabled: true,
+      email: '',
+      sentLogs: []
+    };
+  });
+
+  const [emailToast, setEmailToast] = useState<{ message: string; visible: boolean } | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('dogkit_email_fallback', JSON.stringify(emailFallback));
+  }, [emailFallback]);
+
+  // Selettore cane fluido per gestione 3+ cani
+  const handleSelectActiveDog = (dogId: string) => {
+    setActiveDogId(dogId);
+    const selected = dogsList.find(d => d.id === dogId);
+    if (selected) {
+      setPuppyProfile({
+        name: selected.name,
+        breed: selected.breed,
+        dob: selected.dob,
+        weight: selected.weight,
+        targetWeight: selected.targetWeight
+      });
+    }
+  };
 
   const [preSelectedSymptomId, setPreSelectedSymptomId] = useState<string | null>(null);
   const [firstAidTab, setFirstAidTab] = useState<'symptoms' | 'procedures' | 'health'>('symptoms');
@@ -487,35 +553,108 @@ export default function App() {
     localStorage.setItem('dogkit_notifications', JSON.stringify(notificationSettings));
   }, [notificationSettings]);
 
-  // Notification Logic
+  // Funzione di dispatch email fallback per promemoria (iOS / push disattivate)
+  const triggerEmailReminder = (title: string, body: string, dogName?: string) => {
+    const targetEmail = emailFallback.email || userAccount?.email;
+    if (!targetEmail) {
+      console.warn('[Email Fallback] Nessun indirizzo email configurato per il fallback.');
+      return;
+    }
+
+    const logEntry = {
+      id: 'email_' + Date.now(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      title: `${title} (${dogName || puppyProfile.name})`,
+      body
+    };
+
+    setEmailFallback(prev => ({
+      ...prev,
+      sentLogs: [logEntry, ...(prev.sentLogs || []).slice(0, 19)]
+    }));
+
+    // Mostra toast di feedback all'utente
+    setEmailToast({
+      message: `Promemoria inviato a ${targetEmail}: "${body}"`,
+      visible: true
+    });
+    setTimeout(() => setEmailToast(null), 6000);
+  };
+
+  // Notification Logic (Push + Fallback Email per iOS e multi-cane)
   useEffect(() => {
     const checkNotifications = () => {
       const now = new Date();
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      
+      const today = now.toDateString();
+      const pushGranted = safeGetNotificationPermission() === 'granted';
+
+      // 1. Promemoria giornalieri (Pasti, Acqua)
       notificationSettings.forEach(setting => {
         if (setting.enabled && setting.time === currentTime) {
-          // Prevent multiple notifications in the same minute
           const lastNotifKey = `last_notif_${setting.id}`;
           const lastNotifTime = localStorage.getItem(lastNotifKey);
-          const today = now.toDateString();
 
           if (lastNotifTime !== today) {
-            if (safeGetNotificationPermission() === 'granted') {
-              safeSendNotification('Dog Kit Reminder 🐾', {
-                body: `${setting.label}: È ora!`,
-                icon: 'https://picsum.photos/seed/dog/100/100'
+            localStorage.setItem(lastNotifKey, today);
+            const title = 'Dog Kit Reminder 🐾';
+            const body = `${setting.label}: È ora per ${puppyProfile.name}!`;
+
+            if (pushGranted) {
+              safeSendNotification(title, {
+                body,
+                icon: '/favicon.png'
               });
-              localStorage.setItem(lastNotifKey, today);
+            }
+
+            // Fallback Email se iOS o se push bloccate/non concesse
+            if ((!pushGranted || isIOSDevice) && emailFallback.enabled) {
+              triggerEmailReminder(title, body, puppyProfile.name);
+            }
+          }
+        }
+      });
+
+      // 2. Promemoria Sanitari Multi-Cane (Vaccini e Visite)
+      const todayYMD = now.toISOString().split('T')[0];
+      dogsList.forEach(dog => {
+        if (dog.nextVaccineDate && dog.nextVaccineDate === todayYMD) {
+          const vaccineKey = `last_vaccine_notif_${dog.id}_${todayYMD}`;
+          if (!localStorage.getItem(vaccineKey)) {
+            localStorage.setItem(vaccineKey, 'true');
+            const title = `💉 Vaccino in scadenza per ${dog.name}`;
+            const body = `Oggi è in programma il vaccino o antiparassitario per ${dog.name}.`;
+
+            if (pushGranted) {
+              safeSendNotification(title, { body, icon: '/favicon.png' });
+            }
+            if ((!pushGranted || isIOSDevice) && emailFallback.enabled) {
+              triggerEmailReminder(title, body, dog.name);
+            }
+          }
+        }
+
+        if (dog.nextAppointmentDate && dog.nextAppointmentDate === todayYMD) {
+          const apptKey = `last_appt_notif_${dog.id}_${todayYMD}`;
+          if (!localStorage.getItem(apptKey)) {
+            localStorage.setItem(apptKey, 'true');
+            const title = `🏥 Visita veterinaria per ${dog.name}`;
+            const body = `Oggi ${dog.name} ha una visita programmata${dog.vetClinic ? ` presso ${dog.vetClinic}` : ''}.`;
+
+            if (pushGranted) {
+              safeSendNotification(title, { body, icon: '/favicon.png' });
+            }
+            if ((!pushGranted || isIOSDevice) && emailFallback.enabled) {
+              triggerEmailReminder(title, body, dog.name);
             }
           }
         }
       });
     };
 
-    const interval = setInterval(checkNotifications, 30000); // Check every 30 seconds
+    const interval = setInterval(checkNotifications, 20000); // Check every 20 seconds
     return () => clearInterval(interval);
-  }, [notificationSettings]);
+  }, [notificationSettings, dogsList, isIOSDevice, emailFallback, puppyProfile, userAccount]);
   useEffect(() => {
     localStorage.setItem('dogkit_routine', JSON.stringify(routine));
   }, [routine]);
@@ -816,15 +955,97 @@ export default function App() {
               </button>
             )}
 
-            <div className="flex flex-col items-end">
-              <p className="text-sm font-semibold">{puppyProfile.name || 'Milo'}</p>
-              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">{puppyProfile.breed || 'Dog Care'}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-indigo-50 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-indigo-600">
-              <Dog size={22} />
+            {/* Quick Dog Switcher in Top Bar */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDogDropdown(prev => !prev)}
+                className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200/70 transition-all text-left"
+                title="Cambia cane attivo"
+              >
+                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
+                  {puppyProfile.name ? puppyProfile.name.charAt(0).toUpperCase() : '🐕'}
+                </div>
+                <div className="hidden sm:flex flex-col items-start leading-none">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-black text-slate-800">{puppyProfile.name || 'Milo'}</span>
+                    {dogsList.length > 1 && (
+                      <span className="text-[9px] font-black bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded-full">
+                        {dogsList.length} cani
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{puppyProfile.breed || 'Dog Care'}</span>
+                </div>
+                {dogsList.length > 1 && <ChevronDown size={14} className="text-indigo-600 ml-0.5" />}
+              </button>
+
+              {/* Dropdown switch rapido multi-cane */}
+              <AnimatePresence>
+                {showDogDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50"
+                  >
+                    <div className="px-3 py-2 border-b border-slate-100 mb-1 flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-700 uppercase tracking-wider">I Tuoi Cani ({dogsList.length})</span>
+                      <button
+                        onClick={() => {
+                          setShowDogDropdown(false);
+                          setCurrentPage('first-aid');
+                          setFirstAidTab('health');
+                        }}
+                        className="text-[10px] font-bold text-indigo-600 hover:underline"
+                      >
+                        + Gestisci
+                      </button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto space-y-1">
+                      {dogsList.map(dog => (
+                        <button
+                          key={dog.id}
+                          onClick={() => {
+                            handleSelectActiveDog(dog.id);
+                            setShowDogDropdown(false);
+                          }}
+                          className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left ${
+                            activeDogId === dog.id
+                              ? 'bg-indigo-50 border border-indigo-200 text-indigo-900 font-bold'
+                              : 'hover:bg-slate-50 text-slate-700 font-medium'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black ${
+                              activeDogId === dog.id ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'
+                            }`}>
+                              {dog.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold leading-tight">{dog.name}</p>
+                              <p className="text-[10px] text-slate-400">{dog.breed || 'Incrocio'}</p>
+                            </div>
+                          </div>
+                          {activeDogId === dog.id && (
+                            <span className="text-[10px] font-black text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded">Attivo</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>
+
+        {/* Banner Modalità Offline dal Veterinario / Senza Rete */}
+        {!isOnline && (
+          <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white px-4 py-2.5 text-xs font-bold flex items-center justify-center gap-2.5 shadow-sm sticky top-0 z-30">
+            <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+            <span>🟢 Modalità Offline Attiva: Tutta la cartella clinica, i vaccini e i dati dei tuoi cani sono al sicuro e consultabili anche senza connessione internet.</span>
+          </div>
+        )}
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 lg:p-10">
@@ -844,6 +1065,9 @@ export default function App() {
                 isPremium={isPremium}
                 puppyProfile={puppyProfile}
                 setPuppyProfile={setPuppyProfile}
+                dogsList={dogsList}
+                activeDogId={activeDogId}
+                onSelectDog={handleSelectActiveDog}
                 completedLessons={completedLessons}
                 swUpdateAvailable={swUpdateAvailable}
                 onUpdateApp={handleUpdateApp}
@@ -920,11 +1144,47 @@ export default function App() {
               />}
               {currentPage === 'resources' && <ResourcesView />}
               {currentPage === 'faq' && <FaqView />}
-              {currentPage === 'notifications' && <NotificationsView settings={notificationSettings} setSettings={setNotificationSettings} />}
+              {currentPage === 'notifications' && (
+                <NotificationsView 
+                  settings={notificationSettings} 
+                  setSettings={setNotificationSettings}
+                  isIOSDevice={isIOSDevice}
+                  emailFallback={emailFallback}
+                  setEmailFallback={setEmailFallback}
+                  userAccount={userAccount}
+                  onTriggerTestEmail={() => triggerEmailReminder('Promemoria di Prova 🐾', `Questo è un promemoria di test per ${puppyProfile.name || 'il tuo cane'}. Riceverai qui i promemoria quando le push notification sono bloccate su iOS.`, puppyProfile.name)}
+                />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Toast Notifica Fallback Email */}
+      <AnimatePresence>
+        {emailToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-6 right-6 z-50 max-w-sm bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-slate-700 flex items-start gap-3"
+          >
+            <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0 text-white font-bold text-sm">
+              ✉️
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-emerald-300">Fallback Email Inviato</p>
+              <p className="text-xs text-slate-200 mt-0.5">{emailToast.message}</p>
+            </div>
+            <button 
+              onClick={() => setEmailToast(null)} 
+              className="text-slate-400 hover:text-white text-xs p-1"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stripe Success Celebration Modal */}
       <StripeSuccessModal 
@@ -956,6 +1216,9 @@ function HomeView({
   isPremium, 
   puppyProfile, 
   setPuppyProfile, 
+  dogsList = [],
+  activeDogId,
+  onSelectDog,
   completedLessons,
   swUpdateAvailable,
   onUpdateApp,
@@ -1066,6 +1329,27 @@ function HomeView({
             Ciao, proprietario di {puppyProfile.name}! 🐾
           </h2>
           <p className="text-slate-500 mt-1">Gestisci la giornata, l'addestramento e i traguardi del tuo cucciolo.</p>
+
+          {/* Quick Dog Selector Chips se presenti più cani */}
+          {dogsList.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-3">
+              <span className="text-[11px] font-bold text-slate-400 mr-1">Cane attivo:</span>
+              {dogsList.map((dog: any) => (
+                <button
+                  key={dog.id}
+                  onClick={() => onSelectDog && onSelectDog(dog.id)}
+                  className={`px-3 py-1 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
+                    activeDogId === dog.id
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <span>{dog.name}</span>
+                  {activeDogId === dog.id && <span className="text-[9px] bg-white/20 px-1 rounded">✓</span>}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Quick state debug/test button inside home view */}
@@ -2795,8 +3079,26 @@ function FirstAidView({
   );
 }
 
-function NotificationsView({ settings, setSettings }: { settings: NotificationSetting[], setSettings: React.Dispatch<React.SetStateAction<NotificationSetting[]>> }) {
+function NotificationsView({ 
+  settings, 
+  setSettings,
+  isIOSDevice,
+  emailFallback,
+  setEmailFallback,
+  userAccount,
+  onTriggerTestEmail
+}: { 
+  settings: NotificationSetting[];
+  setSettings: React.Dispatch<React.SetStateAction<NotificationSetting[]>>;
+  isIOSDevice?: boolean;
+  emailFallback?: { enabled: boolean; email: string; sentLogs: any[] };
+  setEmailFallback?: React.Dispatch<React.SetStateAction<any>>;
+  userAccount?: any;
+  onTriggerTestEmail?: () => void;
+}) {
   const [permission, setPermission] = useState<NotificationPermission>(safeGetNotificationPermission());
+  const [testSent, setTestSent] = useState(false);
+  const [emailInput, setEmailInput] = useState(emailFallback?.email || userAccount?.email || '');
 
   const requestPermission = async () => {
     const result = await safeRequestNotificationPermission();
@@ -2815,11 +3117,38 @@ function NotificationsView({ settings, setSettings }: { settings: NotificationSe
     setSettings(prev => prev.map(s => s.id === id ? { ...s, time } : s));
   };
 
+  const handleSaveEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (setEmailFallback) {
+      setEmailFallback((prev: any) => ({
+        ...prev,
+        email: emailInput
+      }));
+    }
+  };
+
+  const handleToggleEmailFallback = () => {
+    if (setEmailFallback) {
+      setEmailFallback((prev: any) => ({
+        ...prev,
+        enabled: !prev.enabled
+      }));
+    }
+  };
+
+  const handleTestEmailClick = () => {
+    if (onTriggerTestEmail) {
+      onTriggerTestEmail();
+      setTestSent(true);
+      setTimeout(() => setTestSent(false), 4000);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <header className="mb-10">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Centro Notifiche 🔔</h2>
-        <p className="text-slate-500 mt-1">Imposta gli orari dei promemoria per acqua e alimentazione in base alla tua routine.</p>
+        <p className="text-slate-500 mt-1">Imposta gli orari dei promemoria per acqua, pasti, vaccini e visite del tuo cane.</p>
       </header>
 
       {/* Permission Status Cards */}
@@ -2829,13 +3158,13 @@ function NotificationsView({ settings, setSettings }: { settings: NotificationSe
             <ShieldAlert size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-amber-900 text-sm">Richiesta di autorizzazione</h3>
-            <p className="text-sm text-amber-700 mb-4 font-medium">Per ricevere i promemoria, il browser deve autorizzare le notifiche.</p>
+            <h3 className="font-bold text-amber-900 text-sm">Richiesta di autorizzazione notifiche</h3>
+            <p className="text-sm text-amber-700 mb-4 font-medium">Per ricevere i promemoria push, autorizza le notifiche del browser.</p>
             <button 
               onClick={requestPermission}
               className="px-6 py-2.5 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700 transition-colors text-sm shadow-md shadow-amber-100"
             >
-              Abilita notifiche
+              Abilita notifiche push
             </button>
             <p className="text-xs text-amber-600 mt-2">Ti chiederemo il permesso solo quando deciderai tu di attivarle.</p>
           </div>
@@ -2848,8 +3177,8 @@ function NotificationsView({ settings, setSettings }: { settings: NotificationSe
             <CheckCircle2 size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-emerald-900 text-sm">Dispositivo Collegato</h3>
-            <p className="text-sm text-emerald-700 font-semibold">Promemoria attivi su questo dispositivo.</p>
+            <h3 className="font-bold text-emerald-900 text-sm">Notifiche Push Attive</h3>
+            <p className="text-sm text-emerald-700 font-semibold">I promemoria push di sistema sono abilitati su questo dispositivo.</p>
           </div>
         </div>
       )}
@@ -2860,13 +3189,91 @@ function NotificationsView({ settings, setSettings }: { settings: NotificationSe
             <X size={20} />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-red-900 text-sm">Notifiche Bloccate</h3>
+            <h3 className="font-bold text-red-900 text-sm">Notifiche Push Non Disponibili / Bloccate</h3>
             <p className="text-sm text-red-700 leading-relaxed font-semibold">
-              Le notifiche risultano bloccate dal browser. Puoi riattivarle dalle impostazioni del browser o del dispositivo.
+              Le notifiche push risultano non autorizzate o bloccate su questo browser. Il <span className="underline font-black">Fallback Email automatico</span> qui sotto garantisce la ricezione puntuale dei promemoria.
             </p>
           </div>
         </div>
       )}
+
+      {/* SEZIONE SPECIALE: FALLBACK EMAIL PER iOS & DISPOSITIVI SENZA PUSH */}
+      <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white p-7 sm:p-8 rounded-[2.5rem] shadow-xl border border-indigo-500/30 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center shrink-0">
+              <span className="text-2xl">📬</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-400/20 text-indigo-200 text-[10px] font-black uppercase tracking-wider border border-indigo-400/30">
+                  {isIOSDevice ? '📱 Dispositivo iOS Rilevato' : '🛡️ Fallback Garantito'}
+                </span>
+              </div>
+              <h3 className="text-lg font-black text-white mt-0.5">
+                Fallback Email per Promemoria (iOS & Offline)
+              </h3>
+              <p className="text-xs text-slate-300">
+                Se usi iOS (iPhone/iPad) o se le notifiche push del browser sono bloccate, ricevi subito i promemoria via email.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 self-end sm:self-center">
+            <span className="text-xs font-bold text-slate-300">Stato Fallback:</span>
+            <button
+              onClick={handleToggleEmailFallback}
+              className={`w-14 h-8 rounded-full transition-colors relative p-1 ${
+                emailFallback?.enabled ? 'bg-emerald-500' : 'bg-slate-700'
+              }`}
+            >
+              <motion.div
+                animate={{ x: emailFallback?.enabled ? 24 : 0 }}
+                className="w-6 h-6 bg-white rounded-full shadow-md"
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Configurazione Email */}
+        <form onSubmit={handleSaveEmail} className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label className="block text-[11px] font-black uppercase tracking-wider text-indigo-200 mb-1.5">
+                Email di recapito promemoria
+              </label>
+              <input
+                type="email"
+                placeholder="latuaemail@esempio.com"
+                value={emailInput}
+                onChange={(e) => {
+                  setEmailInput(e.target.value);
+                  if (setEmailFallback) {
+                    setEmailFallback((prev: any) => ({ ...prev, email: e.target.value }));
+                  }
+                }}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 font-bold text-sm outline-none focus:border-indigo-400 focus:bg-white/20 transition"
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              <button
+                type="button"
+                onClick={handleTestEmailClick}
+                className="px-5 py-3 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-md active:scale-95 whitespace-nowrap"
+              >
+                {testSent ? '✓ Email Inviata!' : '🧪 Invia Test Email'}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-slate-300 pt-2 border-t border-white/10">
+            <span>
+              Destinatario attivo: <strong className="text-amber-300">{emailFallback?.email || userAccount?.email || 'Nessuna email impostata'}</strong>
+            </span>
+            <span className="text-emerald-400 font-bold">✓ Copertura vaccini, visite e pasti attiva</span>
+          </div>
+        </form>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {settings.map(setting => (
@@ -2920,19 +3327,18 @@ function NotificationsView({ settings, setSettings }: { settings: NotificationSe
           </div>
           <div className="space-y-4">
             <div>
-              <h3 className="text-xl font-bold mb-2">Come funzionano le notifiche?</h3>
+              <h3 className="text-xl font-bold mb-2">Come funzionano i promemoria intelligenti?</h3>
               <p className="text-white/80 leading-relaxed text-sm">
-                Le notifiche di sistema funzionano quando l'applicazione è aperta in una scheda del browser (anche in background). 
-                Assicurati di non chiudere completamente la scheda se desideri ricevere i promemoria puntuali per l'acqua e i pasti del tuo cane.
+                I promemoria inviano notifiche push di sistema o notifiche email automatiche di fallback. Questo garantisce che né tu né la tua famiglia dimentichiate vaccini, antiparassitari, visite veterinarie o l'idratazione quotidiana.
               </p>
             </div>
             
             <div className="pt-4 border-t border-white/20">
               <h4 className="font-bold text-sm text-indigo-100 flex items-center gap-2 mb-1">
-                <ShieldAlert size={16} /> Nota per utenti Apple iPhone
+                <ShieldAlert size={16} /> Nota per utenti Apple iPhone & iOS
               </h4>
               <p className="text-white/70 text-xs leading-relaxed">
-                Su iPhone alcune notifiche richiedono apertura dell’app dalla schermata Home come web app installata. Clicca sul tasto di condivisione di Safari e scegli "Aggiungi alla schermata Home" per garantire il funzionamento in background.
+                Su iOS, se le notifiche push non sono disponibili nel browser, il sistema attiva in automatico il <strong className="text-white">Fallback Email</strong> all'indirizzo configurato, recapitando gli avvisi direttamente nella tua casella di posta.
               </p>
             </div>
           </div>
