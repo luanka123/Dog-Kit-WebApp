@@ -123,11 +123,11 @@ const safeSendNotification = (title: string, options?: NotificationOptions) => {
 const getSafeDefaultCheckoutUrl = (): string => {
   const envVal = (import.meta as any).env?.VITE_STRIPE_CHECKOUT_URL;
   if (envVal) return envVal;
-  return 'https://buy.stripe.com/5kQaEW4cafTX5rpcnIeME09?client_reference_id=dogkit';
+  return 'https://buy.stripe.com/eVq7sKeQOdLPdXV5ZkeME0a';
 };
 
 export const PREMIUM = {
-  prezzo: '17,00',
+  prezzo: '4,99',
   valuta: 'EUR',
   checkoutUrl: getSafeDefaultCheckoutUrl(),
   lezioniGratis: 3,

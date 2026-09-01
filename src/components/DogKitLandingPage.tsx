@@ -124,7 +124,7 @@ export default function DogKitLandingPage() {
     },
     {
       q: "Ci sono abbonamenti o costi nascosti?",
-      a: "No, nessun abbonamento o rinnovo ricorrente. Paghi una sola volta 17€ ed hai accesso a vita a tutti gli aggiornamenti futuri."
+      a: "No, nessun abbonamento o rinnovo ricorrente. Paghi una sola volta 4,99€ ed hai accesso a vita a tutti gli aggiornamenti futuri."
     },
     {
       q: "Funziona su iPhone e Android?",
@@ -165,7 +165,7 @@ export default function DogKitLandingPage() {
               href="#pricing"
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-indigo-700 hover:bg-indigo-50 font-black text-lg shadow-xl hover:shadow-2xl transition transform hover:-translate-y-0.5 active:translate-y-0"
             >
-              Inizia Ora a 17€ →
+              Inizia Ora a 4,99€ →
             </a>
           </div>
         </div>
@@ -244,7 +244,7 @@ export default function DogKitLandingPage() {
         </div>
       </section>
 
-      {/* 5. PRICING (UNA SOLA CARTA - 17€ PAGAMENTO UNICO) */}
+      {/* 5. PRICING (UNA SOLA CARTA - 4,99€ PAGAMENTO UNICO) */}
       <section id="pricing" className="py-16 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto scroll-mt-10">
         <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-indigo-500 shadow-2xl relative overflow-hidden text-center">
           
@@ -266,7 +266,7 @@ export default function DogKitLandingPage() {
               Valore reale del contenuto: 99€
             </div>
             <div className="flex items-baseline justify-center gap-2">
-              <span className="text-6xl sm:text-7xl font-black text-white tracking-tight">17€</span>
+              <span className="text-6xl sm:text-7xl font-black text-white tracking-tight">4,99€</span>
               <span className="text-slate-400 text-lg font-bold">/ una tantum</span>
             </div>
           </div>
@@ -294,7 +294,7 @@ export default function DogKitLandingPage() {
           {/* PULSANTE STRIPE UFFICIALE (Stripe Buy Button) */}
           <div className="flex flex-col items-center justify-center my-6 min-h-[50px]">
             <stripe-buy-button
-              buy-button-id="buy_btn_1UAJhPCO4FW4BXwqi5agf5Gu"
+              buy-button-id="buy_btn_1UAqkgCO4FW4BXwqGd69Rl3o"
               publishable-key="pk_live_51RMXCHCO4FW4BXwqlwjf3R8dy1YsWafpNirP9CTv2M9tnD6i2hCClmFtdmwRjHMkTkBo3YEbkgsV3ZFdYZLj31xD00yiGXd7Xd"
             />
           </div>
@@ -302,7 +302,7 @@ export default function DogKitLandingPage() {
           {/* Fallback CTA Link */}
           <div className="mt-3">
             <a 
-              href="https://buy.stripe.com/5kQaEW4cafTX5rpcnIeME09?client_reference_id=dogkit"
+              href="https://buy.stripe.com/eVq7sKeQOdLPdXV5ZkeME0a"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 text-xs text-indigo-400 hover:text-indigo-300 font-medium underline"

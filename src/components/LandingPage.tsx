@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
   CheckCircle2, 
@@ -21,14 +21,49 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+// Dichiarazione elemento custom Stripe Buy Button per TypeScript JSX e React
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'stripe-buy-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        'buy-button-id'?: string;
+        'publishable-key'?: string;
+      };
+    }
+  }
+}
+
+declare module 'react' {
+  namespace JSX {
+    interface IntrinsicElements {
+      'stripe-buy-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        'buy-button-id'?: string;
+        'publishable-key'?: string;
+      };
+    }
+  }
+}
+
 // Link di pagamento Stripe di produzione
-const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/5kQaEW4cafTX5rpcnIeME09";
+const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/eVq7sKeQOdLPdXV5ZkeME0a";
 
 export interface LandingPageProps {
   onEnterApp?: () => void;
 }
 
 export default function LandingPage({ onEnterApp }: LandingPageProps) {
+  // Caricamento script ufficiale Stripe Buy Button
+  useEffect(() => {
+    const scriptId = 'stripe-buy-button-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://js.stripe.com/v3/buy-button.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
   // Stato per gestire le FAQ a fisarmonica
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -159,9 +194,9 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             <a
               href="#pricing"
               className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition"
-              aria-label="Vai all'offerta di sblocco a 17 euro"
+              aria-label="Vai all'offerta di sblocco a 4,99 euro"
             >
-              Ottieni a 17€
+              Ottieni a 4,99€
             </a>
           </div>
         </div>
@@ -198,9 +233,9 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-white hover:bg-slate-50 text-indigo-700 font-black text-lg shadow-2xl hover:shadow-white/20 transition-all transform hover:-translate-y-1 active:translate-y-0"
-              aria-label="Sblocca Dog Kit a 17 euro ora su Stripe"
+              aria-label="Sblocca Dog Kit a 4,99 euro ora su Stripe"
             >
-              <span>Sblocca Dog Kit a 17€ Ora →</span>
+              <span>Sblocca Dog Kit a 4,99€ Ora →</span>
             </a>
           </div>
 
@@ -291,13 +326,13 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         </div>
       </section>
 
-      {/* 5. PRICING (17€ PAGAMENTO UNICO) */}
+      {/* 5. PRICING (4,99€ PAGAMENTO UNICO) */}
       <section id="pricing" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto scroll-mt-10">
         <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-indigo-500 shadow-2xl relative overflow-hidden text-center">
           
           {/* Badge Risparmio */}
           <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-amber-500 text-white text-xs font-black uppercase tracking-wider shadow-md mb-4 animate-pulse">
-            🔥 Offerta di lancio - Risparmi 82€ (-83%)
+            🔥 Offerta di lancio - Risparmi 94€ (-95%)
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-black text-white">
@@ -314,7 +349,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           <div className="my-8 flex flex-col items-center justify-center">
             <div className="flex items-center gap-3">
               <span className="text-2xl sm:text-3xl font-bold text-slate-500 line-through">99€</span>
-              <span className="text-5xl sm:text-7xl font-black text-white tracking-tight">17€</span>
+              <span className="text-5xl sm:text-7xl font-black text-white tracking-tight">4,99€</span>
               <span className="text-slate-400 text-base sm:text-lg font-bold">/ pagamento unico</span>
             </div>
             <p className="text-xs text-emerald-400 font-bold mt-1">
@@ -346,16 +381,24 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             </div>
           </div>
 
-          {/* PULSANTE CTA CON STRIPE */}
-          <div className="mt-6">
+          {/* PULSANTE STRIPE UFFICIALE (Stripe Buy Button) */}
+          <div className="flex flex-col items-center justify-center my-6 min-h-[50px]">
+            <stripe-buy-button
+              buy-button-id="buy_btn_1UAqkgCO4FW4BXwqGd69Rl3o"
+              publishable-key="pk_live_51RMXCHCO4FW4BXwqlwjf3R8dy1YsWafpNirP9CTv2M9tnD6i2hCClmFtdmwRjHMkTkBo3YEbkgsV3ZFdYZLj31xD00yiGXd7Xd"
+            />
+          </div>
+
+          {/* PULSANTE CTA DIRETTO / FALLBACK */}
+          <div className="mt-4">
             <a 
               href={STRIPE_CHECKOUT_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-lg uppercase tracking-wider shadow-xl shadow-indigo-600/30 transition-all transform hover:-translate-y-1 active:translate-y-0"
-              aria-label="Sblocca Dog Kit a 17 euro ora"
+              aria-label="Sblocca Dog Kit a 4,99 euro ora"
             >
-              <span>Sblocca Dog Kit a 17€ Ora →</span>
+              <span>Sblocca Dog Kit a 4,99€ Ora →</span>
               <ArrowRight className="w-6 h-6" aria-hidden="true" />
             </a>
 
