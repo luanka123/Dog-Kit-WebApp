@@ -104,7 +104,7 @@ export default function DogKitLandingPage() {
         
         {/* Social Proof Reale */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs sm:text-sm font-semibold mb-6">
-          <span>🐾 Già gestendo la salute di <strong>1.250 cani</strong> con Dog Kit</span>
+          <span>🐾 Appena lanciata — sii tra i primi 50 a vita</span>
         </div>
 
         {/* H1 Richiesta */}
