@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { 
+  Calendar, 
   ChevronDown, 
   ChevronUp, 
-  ArrowRight,
-  Check
+  ArrowRight, 
+  Check, 
+  FileText, 
+  Users,
+  ShieldCheck
 } from 'lucide-react';
 
-export default function DogKitLandingPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+export interface DogKitLandingPageProps {
+  onStartTrial?: () => void;
+  onDirectCheckout?: () => void;
+  checkoutUrl?: string;
+}
+
+export default function DogKitLandingPage({ 
+  onStartTrial, 
+  onDirectCheckout,
+  checkoutUrl = "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b" 
+}: DogKitLandingPageProps) {
   const [spotsLeft, setSpotsLeft] = useState<number>(47);
 
   useEffect(() => {
@@ -30,12 +43,12 @@ export default function DogKitLandingPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
-
-  const handleCheckout = () => {
-    window.location.href = "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b";
+  const handleStartTrial = () => {
+    if (onStartTrial) {
+      onStartTrial();
+    } else {
+      window.location.href = "/?trial=start";
+    }
   };
 
   const features = [
@@ -61,23 +74,27 @@ export default function DogKitLandingPage() {
 
   const faqs = [
     {
-      q: "Cosa include l'offerta a 29€ a vita?",
-      a: "Con un unico pagamento di 29€ (invece di 149€) ottieni accesso illimitato a vita a tutte le funzionalità di Dog Kit: promemoria per scadenze mediche, cartella clinica per tutti i tuoi cani, sincronizzazione in famiglia ed esportazione PDF senza alcun abbonamento futuro."
+      q: "Cosa succede dopo 14 giorni?",
+      a: "I tuoi dati restano salvati. Per continuare a usare promemoria e cartella clinica sblocchi Dog Kit a 29€, una volta sola."
     },
     {
-      q: "Come funziona la garanzia di rimborso in 14 giorni?",
-      a: "Garanzia 14 giorni soddisfatti o rimborsati. Nessuna domanda. Se l'app non soddisfa le tue esigenze, ti basta inviarci un'email entro 14 giorni dall'acquisto e ti rimborseremo tempestivamente l'intero importo del 100%."
+      q: "Serve la carta di credito per iniziare?",
+      a: "No, assolutamente. Inizi inserendo soltanto la tua email, senza alcun vincolo né addebito."
+    },
+    {
+      q: "Cosa include l'accesso definitivo a 29€ a vita?",
+      a: "Con un unico pagamento di 29€ (invece di 149€) ottieni accesso illimitato a vita a tutte le funzionalità di Dog Kit: promemoria sanitari, cartella clinica per tutti i tuoi cani, sincronizzazione in famiglia ed esportazione PDF senza alcun abbonamento futuro."
     },
     {
       q: "Funziona su iPhone, Android e computer?",
-      a: "Sì! Dog Kit è una moderna web app installabile compatibile con tutti gli smartphone iOS (iPhone), Android, tablet e computer. Non serve scaricare app pesanti dagli store e tutti i tuoi dati rimangono sempre sincronizzati."
+      a: "Sì! Dog Kit è una moderna web app installabile compatibile con tutti gli smartphone iOS (iPhone), Android, tablet e computer. Non serve scaricare app dagli store e tutti i dati restano sincronizzati."
     }
   ];
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans antialiased selection:bg-emerald-500 selection:text-white flex flex-col justify-between">
       
-      {/* 1. HEADER */}
+      {/* 1. HEADER (Senza bottone Stripe diretto) */}
       <header className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between border-b border-slate-100">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-xl shadow-xs">
@@ -91,10 +108,10 @@ export default function DogKitLandingPage() {
 
         <div>
           <button 
-            onClick={handleCheckout}
+            onClick={handleStartTrial}
             className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition transform hover:-translate-y-0.5 cursor-pointer"
           >
-            ACQUISTA ORA — 29€ A VITA
+            Inizia prova gratis
           </button>
         </div>
       </header>
@@ -107,12 +124,12 @@ export default function DogKitLandingPage() {
           <span>🐾 Appena lanciata — sii tra i primi 50 a vita</span>
         </div>
 
-        {/* H1 Richiesta */}
+        {/* H1 Richiesto Esatto */}
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.15] max-w-3xl mx-auto">
-          Non Dimenticare Mai Più un Vaccino del Tuo Cane
+          Non dimenticare mai più un vaccino del tuo cane.
         </h1>
 
-        {/* Subheadline Richiesta */}
+        {/* Subheadline */}
         <p className="mt-5 text-base sm:text-xl text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed">
           Promemoria automatici per vaccini, antiparassitari e visite veterinarie. Cartella clinica digitale condivisa con tutta la famiglia.
         </p>
@@ -122,19 +139,19 @@ export default function DogKitLandingPage() {
           <span>🔥 OFFERTA LANCIO LIMITATA — 29€ A VITA (Prezzo normale <span className="line-through text-slate-400">149€</span>)</span>
         </div>
 
-        {/* CTA UNICO & GARANZIA */}
+        {/* CTA PRINCIPALE RICHIESTO */}
         <div className="mt-8 flex flex-col items-center justify-center gap-3 max-w-md mx-auto">
           <button 
-            onClick={handleCheckout}
-            className="w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg sm:text-xl uppercase tracking-wider shadow-lg transition transform hover:-translate-y-1 cursor-pointer"
+            onClick={handleStartTrial}
+            className="w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition transform hover:-translate-y-1 cursor-pointer"
           >
-            <span>ACQUISTA ORA — 29€ A VITA</span>
-            <ArrowRight className="w-6 h-6 text-white" />
+            <span>Inizia la prova gratis di 14 giorni – senza carta</span>
+            <ArrowRight className="w-5 h-5 text-white" />
           </button>
 
-          {/* Sotto CTA */}
-          <p className="text-xs sm:text-sm text-slate-500 font-medium text-center">
-            🔒 Pagamento sicuro Stripe. Garanzia 14 giorni soddisfatti o rimborsati.
+          {/* SOTTO LA CTA RICHIESTO ESATTO */}
+          <p className="text-xs sm:text-sm text-slate-600 font-semibold text-center">
+            Dopo la prova: 29€ una volta sola, per sempre. Nessun abbonamento.
           </p>
         </div>
 
@@ -142,15 +159,15 @@ export default function DogKitLandingPage() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-medium">
           <span className="flex items-center gap-1.5">
             <Check className="w-4 h-4 text-emerald-600" />
+            Nessuna carta richiesta
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Check className="w-4 h-4 text-emerald-600" />
             Funziona su iPhone, Android & PC
           </span>
           <span className="flex items-center gap-1.5">
             <Check className="w-4 h-4 text-emerald-600" />
-            Condivisione in famiglia in tempo reale
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Check className="w-4 h-4 text-emerald-600" />
-            Accesso a vita senza abbonamento
+            Accesso completo a vita dopo la prova
           </span>
         </div>
       </section>
@@ -188,7 +205,7 @@ export default function DogKitLandingPage() {
         </div>
       </section>
 
-      {/* 4. SEZIONE PREZZO CON CONTATORE JS */}
+      {/* 4. SEZIONE PREZZO */}
       <section id="pricing" className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
         
         <div className="text-center max-w-xl mx-auto mb-8">
@@ -261,24 +278,36 @@ export default function DogKitLandingPage() {
             </li>
           </ul>
 
-          {/* CTA Principale */}
+          {/* CTA Principale verso Prova Gratis */}
           <div className="mt-8">
             <button 
-              onClick={handleCheckout}
-              className="w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg sm:text-xl uppercase tracking-wider shadow-lg transition transform hover:-translate-y-1 cursor-pointer"
+              onClick={handleStartTrial}
+              className="w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition transform hover:-translate-y-1 cursor-pointer"
             >
-              <span>ACQUISTA ORA — 29€ A VITA</span>
-              <ArrowRight className="w-6 h-6 text-white" />
+              <span>Inizia la prova gratis di 14 giorni – senza carta</span>
+              <ArrowRight className="w-5 h-5 text-white" />
             </button>
-            <p className="mt-3 text-xs sm:text-sm text-slate-500 font-medium">
-              🔒 Pagamento sicuro Stripe. Garanzia 14 giorni soddisfatti o rimborsati.
+            <p className="mt-3 text-xs sm:text-sm text-slate-600 font-semibold">
+              Dopo la prova: 29€ una volta sola, per sempre. Nessun abbonamento.
             </p>
+          </div>
+
+          {/* Link secondario SOLO in fondo */}
+          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+            <a
+              href={checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 font-bold underline underline-offset-4 cursor-pointer"
+            >
+              Hai già deciso? Sblocca subito a 29€
+            </a>
           </div>
 
         </div>
       </section>
 
-      {/* 5. 3 FAQ */}
+      {/* 5. SEZIONE FAQ */}
       <section className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-14 sm:py-16">
         <div className="text-center max-w-xl mx-auto mb-10">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
@@ -308,8 +337,16 @@ export default function DogKitLandingPage() {
             <span>© 2026 • Tutti i diritti riservati.</span>
           </div>
 
-          <div className="flex items-center gap-1 font-medium">
-            <span>Assistenza:</span>
+          <div className="flex items-center gap-4 font-medium">
+            <a 
+              href={checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 hover:text-indigo-800 font-bold underline underline-offset-2"
+            >
+              Hai già deciso? Sblocca subito a 29€
+            </a>
+            <span>•</span>
             <a href="mailto:mpfprosolution@gmail.com" className="text-slate-800 hover:text-slate-950 underline underline-offset-2">
               mpfprosolution@gmail.com
             </a>

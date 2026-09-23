@@ -34,6 +34,8 @@ interface HealthSectionProps {
   activeDogId: string;
   setActiveDogId: (id: string) => void;
   setPuppyProfile: (profile: any) => void;
+  isReadOnly?: boolean;
+  onReadOnlyAction?: () => void;
 }
 
 export default function HealthSection({
@@ -41,7 +43,9 @@ export default function HealthSection({
   setDogsList,
   activeDogId,
   setActiveDogId,
-  setPuppyProfile
+  setPuppyProfile,
+  isReadOnly = false,
+  onReadOnlyAction
 }: HealthSectionProps) {
   const [showAddDogModal, setShowAddDogModal] = useState(false);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
@@ -227,6 +231,26 @@ export default function HealthSection({
 
   return (
     <div className="space-y-6">
+      {/* Avviso Modalità Sola Lettura */}
+      {isReadOnly && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-amber-900">
+          <div className="flex items-center gap-2.5 text-xs font-bold">
+            <span className="text-base">🔒</span>
+            <span>
+              Modalità sola lettura: la prova gratuita è scaduta. I dati sono al sicuro e consultabili, ma non è possibile modificarli o aggiungere nuovi eventi.
+            </span>
+          </div>
+          {onReadOnlyAction && (
+            <button
+              onClick={onReadOnlyAction}
+              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black shrink-0 transition"
+            >
+              Sblocca Dog Kit
+            </button>
+          )}
+        </div>
+      )}
+
       {/* SELETTORE CANI E GESTIONE MULTI-DOG */}
       <div className="bg-white p-6 rounded-[2rem] border border-slate-150 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -238,8 +262,14 @@ export default function HealthSection({
             <p className="text-xs text-slate-400 mt-0.5">Seleziona o aggiungi un profilo per aggiornare le sue informazioni sanitarie.</p>
           </div>
           <button
-            onClick={() => setShowAddDogModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
+            onClick={() => {
+              if (isReadOnly && onReadOnlyAction) {
+                onReadOnlyAction();
+                return;
+              }
+              setShowAddDogModal(true);
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
           >
             <Plus size={14} />
             Aggiungi Cane
@@ -419,8 +449,14 @@ export default function HealthSection({
                     <p className="text-xs text-slate-400 mt-0.5">Traccia visite, vaccini, farmaci assunti, allergie del cane.</p>
                   </div>
                   <button
-                    onClick={() => setShowAddEventModal(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm shrink-0"
+                    onClick={() => {
+                      if (isReadOnly && onReadOnlyAction) {
+                        onReadOnlyAction();
+                        return;
+                      }
+                      setShowAddEventModal(true);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm shrink-0 cursor-pointer"
                   >
                     <PlusCircle size={14} />
                     Registra Evento

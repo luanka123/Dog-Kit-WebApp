@@ -31,6 +31,9 @@ export interface UserAccount {
   provider: 'google' | 'email' | 'guest';
   id: string;
   joinedAt: string;
+  trial_start?: string;
+  trial_end?: string;
+  is_premium?: boolean;
 }
 
 interface OnboardingModalProps {

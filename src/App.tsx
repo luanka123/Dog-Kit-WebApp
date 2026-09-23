@@ -28,6 +28,7 @@ import {
   Trash2, 
   CheckCircle2, 
   ChevronRight,
+  ArrowRight,
   Sparkles,
   Send,
   Save,
@@ -84,6 +85,10 @@ import SymptomChecker from './components/SymptomChecker';
 import HealthSection from './components/HealthSection';
 import OnboardingModal, { UserAccount } from './components/OnboardingModal';
 import LandingPage from './components/LandingPage';
+import TrialRegistrationModal from './components/TrialRegistrationModal';
+import MandatoryOnboardingModal from './components/MandatoryOnboardingModal';
+import TrialExpiredModal from './components/TrialExpiredModal';
+import { sendTrialEmail, checkAndDispatchTrialEmailSequence } from './utils/trialEmails';
 import { SYMPTOMS_DATA } from './data/symptoms';
 
 // --- Safe Notifications Compatibility Layer ---
@@ -170,16 +175,94 @@ export default function App() {
     return PREMIUM.checkoutUrl;
   });
 
+  // --- Funnel Prova Gratuita (14 Giorni) ---
+  const [trialStart, setTrialStart] = useState<string | null>(() => {
+    return localStorage.getItem('dogkit_trial_start') || null;
+  });
+
+  const [trialEnd, setTrialEnd] = useState<string | null>(() => {
+    return localStorage.getItem('dogkit_trial_end') || null;
+  });
+
+  const [isTrialRegistrationOpen, setIsTrialRegistrationOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('trial') === 'start' || window.location.hash === '#trial';
+    }
+    return false;
+  });
+
+  const [isMandatoryOnboardingOpen, setIsMandatoryOnboardingOpen] = useState<boolean>(() => {
+    const hasCompleted = localStorage.getItem('dogkit_onboarding_completed') === 'true';
+    const hasTrial = localStorage.getItem('dogkit_trial_start');
+    return Boolean(hasTrial && !hasCompleted);
+  });
+
+  const [isTrialExpiredModalOpen, setIsTrialExpiredModalOpen] = useState<boolean>(false);
+  const [readOnlyDismissed, setReadOnlyDismissed] = useState<boolean>(false);
+
+  // Calcolo stato Prova Gratuita
+  const isTrialActive = useMemo(() => {
+    if (isPremium) return false;
+    if (!trialEnd) return false;
+    return new Date(trialEnd).getTime() > Date.now();
+  }, [isPremium, trialEnd]);
+
+  const isTrialExpired = useMemo(() => {
+    if (isPremium) return false;
+    if (!trialEnd) return false;
+    return new Date(trialEnd).getTime() <= Date.now();
+  }, [isPremium, trialEnd]);
+
+  const trialDaysRemaining = useMemo(() => {
+    if (!trialEnd) return 0;
+    const diff = new Date(trialEnd).getTime() - Date.now();
+    if (diff <= 0) return 0;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }, [trialEnd]);
+
+  // Se trial_end è passato e is_premium è false: l'app va in sola lettura
+  const isReadOnly = isTrialExpired && !isPremium;
+
+  // Mostra automaticamente la schermata di prova scaduta alla scadenza
+  useEffect(() => {
+    if (isTrialExpired && !isPremium && !readOnlyDismissed) {
+      setIsTrialExpiredModalOpen(true);
+    }
+  }, [isTrialExpired, isPremium, readOnlyDismissed]);
+
   // Intercettatore parametri di ritorno pagamento Stripe (?paid=true, ?pay=success, ?session_id=...)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('paid') === 'true' || params.get('pay') === 'success' || params.get('session_id')) {
+      const isPaidReturn = params.get('paid') === 'true' || params.get('pay') === 'success' || Boolean(params.get('session_id'));
+      const customerEmail = params.get('customer_email') || params.get('email');
+
+      if (isPaidReturn) {
         setIsPremium(true);
         // Salva in localStorage per le sessioni future
         localStorage.setItem('dogkit_unlocked', 'true');
         localStorage.setItem('dogkit_premium', 'true');
         setStripeSuccess(true);
+
+        // Webhook/redirect: collega utente tramite email
+        if (customerEmail) {
+          setUserAccount(prev => {
+            const updated: UserAccount = {
+              id: prev?.id || 'user_' + Date.now(),
+              name: prev?.name || customerEmail.split('@')[0],
+              email: customerEmail,
+              provider: 'email',
+              joinedAt: prev?.joinedAt || new Date().toISOString(),
+              is_premium: true,
+              trial_start: prev?.trial_start,
+              trial_end: prev?.trial_end
+            };
+            localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
+            return updated;
+          });
+        }
+
         // Rimuove i parametri per ripulire l'indirizzo nel browser mantenendo l'esperienza fluida
         const newUrl = window.location.pathname + window.location.hash;
         window.history.replaceState({}, document.title, newUrl);
@@ -347,12 +430,136 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
-    // Si apre automaticamente per qualsiasi utente non registrato o alla prima apertura
-    const hasAccount = localStorage.getItem('dogkit_user_account');
-    const hasSeenOnboarding = localStorage.getItem('dogkit_onboarded_completed');
-    return !hasAccount || hasSeenOnboarding !== 'true';
-  });
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+
+  // Handler Registrazione Prova Gratuita
+  const handleTrialRegisterSuccess = (accountData: {
+    email: string;
+    trial_start: string;
+    trial_end: string;
+    is_premium: boolean;
+    name?: string;
+  }) => {
+    setTrialStart(accountData.trial_start);
+    setTrialEnd(accountData.trial_end);
+    localStorage.setItem('dogkit_trial_start', accountData.trial_start);
+    localStorage.setItem('dogkit_trial_end', accountData.trial_end);
+
+    const newAccount: UserAccount = {
+      id: 'user_' + Date.now(),
+      email: accountData.email,
+      name: accountData.name || accountData.email.split('@')[0],
+      provider: 'email',
+      joinedAt: accountData.trial_start,
+      trial_start: accountData.trial_start,
+      trial_end: accountData.trial_end,
+      is_premium: false
+    };
+    setUserAccount(newAccount);
+    localStorage.setItem('dogkit_user_account', JSON.stringify(newAccount));
+
+    // Salva fallback email per notifiche
+    setEmailFallback(prev => ({
+      ...prev,
+      email: accountData.email,
+      enabled: true
+    }));
+
+    // Invia email automatica giorno 0 (Benvenuto)
+    sendTrialEmail({
+      day: 0,
+      userEmail: accountData.email,
+      dogName: puppyProfile?.name || 'il tuo cane',
+      isPremium: false,
+      checkoutUrl: customStripeUrl
+    });
+
+    setIsTrialRegistrationOpen(false);
+    // Avvia subito onboarding obbligatorio
+    setIsMandatoryOnboardingOpen(true);
+  };
+
+  // Handler Completamento Onboarding Obbligatorio
+  const handleMandatoryOnboardingComplete = (data: {
+    dog: { name: string; breed: string; dob: string; weight: string; targetWeight: string };
+    firstVaccine: { id: string; type: 'vaccine' | 'parasite' | 'vet'; title: string; date: string; notes: string };
+    notificationsEnabled: boolean;
+  }) => {
+    // Aggiorna profilo attivo
+    setPuppyProfile(data.dog);
+    localStorage.setItem('dogkit_puppy_profile', JSON.stringify(data.dog));
+
+    // Aggiorna o crea il cane nella lista
+    setDogsList(prev => {
+      const activeIdx = prev.findIndex(d => d.id === activeDogId);
+      const newHealthEvent = {
+        id: data.firstVaccine.id,
+        title: data.firstVaccine.title,
+        date: data.firstVaccine.date,
+        type: data.firstVaccine.type,
+        notes: data.firstVaccine.notes
+      };
+
+      if (activeIdx >= 0) {
+        const copy = [...prev];
+        copy[activeIdx] = {
+          ...copy[activeIdx],
+          ...data.dog,
+          healthEvents: [newHealthEvent, ...(copy[activeIdx].healthEvents || [])],
+          nextVaccineDate: data.firstVaccine.date
+        };
+        return copy;
+      } else {
+        const createdDog = {
+          id: 'dog_' + Date.now(),
+          ...data.dog,
+          healthEvents: [newHealthEvent],
+          nextVaccineDate: data.firstVaccine.date
+        };
+        return [createdDog, ...prev];
+      }
+    });
+
+    localStorage.setItem('dogkit_onboarded_completed', 'true');
+    localStorage.setItem('dogkit_onboarding_completed', 'true');
+    setIsMandatoryOnboardingOpen(false);
+  };
+
+  // Handler sblocco licenza Stripe tramite email
+  const handleUnlockWithEmail = (email: string) => {
+    setIsPremium(true);
+    localStorage.setItem('dogkit_unlocked', 'true');
+    localStorage.setItem('dogkit_premium', 'true');
+    setUserAccount(prev => {
+      const updated: UserAccount = {
+        id: prev?.id || 'user_' + Date.now(),
+        name: prev?.name || email.split('@')[0],
+        email: email,
+        provider: 'email',
+        joinedAt: prev?.joinedAt || new Date().toISOString(),
+        is_premium: true,
+        trial_start: prev?.trial_start,
+        trial_end: prev?.trial_end
+      };
+      localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
+      return updated;
+    });
+    setIsTrialExpiredModalOpen(false);
+  };
+
+  // Sequenza email automatica in base a trial_start: giorni 0, 2, 7, 11, 13, 14, 17
+  // Si interrompe automaticamente se is_premium diventa true
+  useEffect(() => {
+    if (trialStart && userAccount?.email && !isPremium) {
+      checkAndDispatchTrialEmailSequence({
+        trialStart,
+        userEmail: userAccount.email,
+        dogName: puppyProfile?.name || 'il tuo cane',
+        isPremium,
+        checkoutUrl: customStripeUrl
+      });
+    }
+  }, [trialStart, userAccount?.email, isPremium, puppyProfile?.name, customStripeUrl]);
 
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
@@ -589,6 +796,11 @@ export default function App() {
       const today = now.toDateString();
       const pushGranted = safeGetNotificationPermission() === 'granted';
 
+      // Promemoria disattivati quando la prova gratuita è scaduta e is_premium è false
+      if (!isPremium && trialEnd && new Date(trialEnd).getTime() <= Date.now()) {
+        return;
+      }
+
       // 1. Promemoria giornalieri (Pasti, Acqua)
       notificationSettings.forEach(setting => {
         if (setting.enabled && setting.time === currentTime) {
@@ -718,16 +930,27 @@ export default function App() {
     </button>
   );
 
-  // --- Controllo Accesso: Mostra LandingPage di vendita ai visitatori non sbloccati ---
-  if (!isPremium) {
+  // --- Controllo Accesso: Mostra LandingPage ai visitatori senza premium e senza prova registrata ---
+  if (!isPremium && !trialStart) {
     return (
-      <LandingPage 
-        onEnterApp={() => {
-          setIsPremium(true);
-          localStorage.setItem('dogkit_unlocked', 'true');
-          localStorage.setItem('dogkit_premium', 'true');
-        }}
-      />
+      <>
+        <LandingPage 
+          onStartTrial={() => setIsTrialRegistrationOpen(true)}
+          onDirectCheckout={() => {
+            window.location.href = customStripeUrl;
+          }}
+          checkoutUrl={customStripeUrl}
+          onEnterApp={() => setIsTrialRegistrationOpen(true)}
+        />
+        <TrialRegistrationModal
+          isOpen={isTrialRegistrationOpen}
+          onClose={() => setIsTrialRegistrationOpen(false)}
+          onRegisterSuccess={handleTrialRegisterSuccess}
+          onDirectCheckout={() => {
+            window.location.href = customStripeUrl;
+          }}
+        />
+      </>
     );
   }
 
@@ -862,6 +1085,59 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* Banner Fisso: Prova Gratuita Attiva */}
+        {isTrialActive && (
+          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 text-white px-4 py-2 text-xs sm:text-sm font-bold flex flex-wrap items-center justify-between gap-2 shadow-sm shrink-0 z-40">
+            <div className="flex items-center gap-2">
+              <span className="text-base animate-pulse">⏳</span>
+              <span>
+                Prova gratuita: {trialDaysRemaining === 1 ? "oggi è l'ultimo giorno!" : `mancano ${trialDaysRemaining} giorni`}
+              </span>
+              <span className="hidden sm:inline text-white/80 font-medium text-xs">
+                • Tutte le funzioni sbloccate per {puppyProfile.name}
+              </span>
+            </div>
+            <a
+              href={customStripeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-1 bg-white text-emerald-800 hover:bg-emerald-50 active:scale-95 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition flex items-center gap-1.5 no-underline ml-auto"
+            >
+              <span>Sblocca per sempre a 29€</span>
+              <ArrowRight size={13} />
+            </a>
+          </div>
+        )}
+
+        {/* Banner Fisso: Prova Scaduta (Sola Lettura) */}
+        {isTrialExpired && (
+          <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 text-white px-4 py-2 text-xs sm:text-sm font-bold flex flex-wrap items-center justify-between gap-2 shadow-sm shrink-0 z-40">
+            <div className="flex items-center gap-2">
+              <Lock size={15} className="text-amber-200" />
+              <span>
+                La tua prova è finita. I dati di {puppyProfile.name} sono al sicuro (Sola Lettura).
+              </span>
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                onClick={() => setIsTrialExpiredModalOpen(true)}
+                className="text-xs font-bold text-white/90 hover:text-white underline underline-offset-2 px-1 cursor-pointer"
+              >
+                Dettagli
+              </button>
+              <a
+                href={customStripeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1 bg-white text-orange-950 hover:bg-amber-50 active:scale-95 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition flex items-center gap-1.5 no-underline"
+              >
+                <span>Sblocca per sempre a 29€</span>
+                <ArrowRight size={13} />
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 relative z-30">
           <div className="flex items-center gap-3">
@@ -1141,6 +1417,8 @@ export default function App() {
                 firstAidTab={firstAidTab}
                 setFirstAidTab={setFirstAidTab}
                 setPuppyProfile={setPuppyProfile}
+                isReadOnly={isReadOnly}
+                onReadOnlyAction={() => setIsTrialExpiredModalOpen(true)}
               />}
               {currentPage === 'resources' && <ResourcesView />}
               {currentPage === 'faq' && <FaqView />}
@@ -1202,6 +1480,37 @@ export default function App() {
         installPromptEvent={installPromptEvent}
         onTriggerInstall={handleTriggerInstall}
         isStandalone={isStandalone}
+      />
+
+      {/* Onboarding Obbligatorio al primo accesso per Prova Gratuita */}
+      <MandatoryOnboardingModal
+        isOpen={isMandatoryOnboardingOpen}
+        initialDogName={puppyProfile.name}
+        userEmail={userAccount?.email || ''}
+        onComplete={handleMandatoryOnboardingComplete}
+      />
+
+      {/* Schermata di Prova Scaduta (Sola Lettura) */}
+      <TrialExpiredModal
+        isOpen={isTrialExpiredModalOpen}
+        onCloseReadOnly={() => {
+          setIsTrialExpiredModalOpen(false);
+          setReadOnlyDismissed(true);
+        }}
+        dogName={puppyProfile.name}
+        checkoutUrl={customStripeUrl}
+        userEmail={userAccount?.email || ''}
+        onUnlockWithEmail={handleUnlockWithEmail}
+      />
+
+      {/* Modal di Registrazione Prova Gratuita (invocabile anche dall'app) */}
+      <TrialRegistrationModal
+        isOpen={isTrialRegistrationOpen}
+        onClose={() => setIsTrialRegistrationOpen(false)}
+        onRegisterSuccess={handleTrialRegisterSuccess}
+        onDirectCheckout={() => {
+          window.location.href = customStripeUrl;
+        }}
       />
     </div>
   );
@@ -2790,7 +3099,9 @@ function FirstAidView({
   clearPreSelectedSymptom,
   firstAidTab,
   setFirstAidTab,
-  setPuppyProfile
+  setPuppyProfile,
+  isReadOnly,
+  onReadOnlyAction
 }: {
   isPremium: boolean;
   onUnlock: (reason: any) => void;
@@ -2804,6 +3115,8 @@ function FirstAidView({
   firstAidTab: 'symptoms' | 'procedures' | 'health';
   setFirstAidTab: (tab: 'symptoms' | 'procedures' | 'health') => void;
   setPuppyProfile: (profile: any) => void;
+  isReadOnly?: boolean;
+  onReadOnlyAction?: () => void;
 }) {
   const [openAction, setOpenAction] = useState<string | null>(null);
 
@@ -2962,6 +3275,8 @@ function FirstAidView({
               activeDogId={activeDogId}
               setActiveDogId={setActiveDogId}
               setPuppyProfile={setPuppyProfile}
+              isReadOnly={isReadOnly}
+              onReadOnlyAction={onReadOnlyAction}
             />
           )}
 
