@@ -18,7 +18,7 @@ interface TrialExpiredModalProps {
   dogName: string;
   checkoutUrl: string;
   userEmail: string;
-  onUnlockWithEmail: (email: string) => void;
+  onUnlockWithEmail: (email: string, code: string) => void;
 }
 
 export default function TrialExpiredModal({
@@ -31,15 +31,14 @@ export default function TrialExpiredModal({
 }: TrialExpiredModalProps) {
   const [showEmailCheck, setShowEmailCheck] = useState(false);
   const [inputEmail, setInputEmail] = useState(userEmail || '');
-  const [verifiedSuccess, setVerifiedSuccess] = useState(false);
+  const [inputCode, setInputCode] = useState('');
 
   if (!isOpen) return null;
 
   const handleVerifyEmail = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputEmail.trim()) return;
-    onUnlockWithEmail(inputEmail.trim());
-    setVerifiedSuccess(true);
+    if (!inputEmail.trim() || !inputCode.trim()) return;
+    onUnlockWithEmail(inputEmail.trim(), inputCode.trim());
   };
 
   return (
@@ -131,16 +130,24 @@ export default function TrialExpiredModal({
             {showEmailCheck && (
               <form onSubmit={handleVerifyEmail} className="p-4 bg-indigo-50/70 border border-indigo-200/80 rounded-2xl space-y-3">
                 <p className="text-xs font-bold text-indigo-900">
-                  Inserisci il codice di accesso che hai ricevuto dopo l'acquisto per attivare la licenza:
+                  Inserisci l'email e il codice di accesso che hai ricevuto (il codice vale solo per quell'email e ha una scadenza):
                 </p>
+                <input
+                  type="email"
+                  required
+                  placeholder="La tua email"
+                  value={inputEmail}
+                  onChange={(e) => setInputEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-600"
+                />
                 <div className="flex gap-2">
                   <input
                     type="text"
                     required
                     autoCapitalize="characters"
                     placeholder="CODICE DI ACCESSO"
-                    value={inputEmail}
-                    onChange={(e) => setInputEmail(e.target.value)}
+                    value={inputCode}
+                    onChange={(e) => setInputCode(e.target.value)}
                     className="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-600"
                   />
                   <button
@@ -150,11 +157,6 @@ export default function TrialExpiredModal({
                     Verifica
                   </button>
                 </div>
-                {verifiedSuccess && (
-                  <p className="text-xs text-emerald-700 font-bold">
-                    ✓ Licenza verificata e collegata con successo!
-                  </p>
-                )}
               </form>
             )}
 

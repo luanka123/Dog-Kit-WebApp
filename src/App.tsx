@@ -530,16 +530,16 @@ export default function App() {
   };
 
   // Sblocco con codice di accesso verificato dal server (prima bastava una email qualsiasi).
-  const handleUnlockWithEmail = (code: string) => {
+  const handleUnlockWithEmail = (email: string, code: string) => {
     fetch('/api/redeem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code })
+      body: JSON.stringify({ email, code })
     })
       .then(r => r.json())
-      .then((data: { ok?: boolean }) => {
+      .then((data: { ok?: boolean; expired?: boolean }) => {
         if (!data?.ok) {
-          window.alert('Codice non valido. Controlla di averlo scritto bene, oppure scrivi a mpfprosolution@gmail.com.');
+          window.alert(data?.expired ? 'Codice scaduto. Scrivi a mpfprosolution@gmail.com per riceverne uno nuovo.' : 'Codice o email non validi. Controlla di averli scritti bene, oppure scrivi a mpfprosolution@gmail.com.');
           return;
         }
         setIsPremium(true);
