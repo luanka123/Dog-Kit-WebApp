@@ -121,7 +121,7 @@ const safeSendNotification = (title: string, options?: NotificationOptions) => {
 };
 
 // Configura Stripe Dashboard → Prodotti → Dog Kit → Payment Links:
-// - After payment → Redirect to URL: https://dog-kit-web-app.vercel.app/?paid=true
+// - After payment → il premium NON si attiva dall'URL: il codice di accesso si consegna a mano (/api/redeem)
 // - Metadata: client_reference_id = dogkit
 
 // Costanti di Monetizzazione centralizzate
@@ -231,44 +231,17 @@ export default function App() {
     }
   }, [isTrialExpired, isPremium, readOnlyDismissed]);
 
-  // Intercettatore parametri di ritorno pagamento Stripe (?paid=true, ?pay=success, ?session_id=...)
+  // Sicurezza: i parametri dell'URL (?paid=true, ?pay=success, ?session_id=..., ?email=...)
+  // NON sbloccano più nulla. Il premium si attiva solo con un codice verificato dal server (/api/redeem).
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const isPaidReturn = params.get('paid') === 'true' || params.get('pay') === 'success' || Boolean(params.get('session_id'));
-      const customerEmail = params.get('customer_email') || params.get('email');
-
-      if (isPaidReturn) {
-        setIsPremium(true);
-        // Salva in localStorage per le sessioni future
-        localStorage.setItem('dogkit_unlocked', 'true');
-        localStorage.setItem('dogkit_premium', 'true');
-        setStripeSuccess(true);
-
-        // Webhook/redirect: collega utente tramite email
-        if (customerEmail) {
-          setUserAccount(prev => {
-            const updated: UserAccount = {
-              id: prev?.id || 'user_' + Date.now(),
-              name: prev?.name || customerEmail.split('@')[0],
-              email: customerEmail,
-              provider: 'email',
-              joinedAt: prev?.joinedAt || new Date().toISOString(),
-              is_premium: true,
-              trial_start: prev?.trial_start,
-              trial_end: prev?.trial_end
-            };
-            localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
-            return updated;
-          });
-        }
-
-        // Rimuove i parametri per ripulire l'indirizzo nel browser mantenendo l'esperienza fluida
-        const newUrl = window.location.pathname + window.location.hash;
-        window.history.replaceState({}, document.title, newUrl);
-      } else if (localStorage.getItem('dogkit_unlocked') === 'true' || localStorage.getItem('dogkit_premium') === 'true') {
-        setIsPremium(true);
-      }
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('paid') || params.has('pay') || params.has('session_id')) {
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+    if (localStorage.getItem('dogkit_unlocked') === 'true' || localStorage.getItem('dogkit_premium') === 'true') {
+      setIsPremium(true);
     }
   }, []);
 
@@ -525,26 +498,31 @@ export default function App() {
     setIsMandatoryOnboardingOpen(false);
   };
 
-  // Handler sblocco licenza Stripe tramite email
-  const handleUnlockWithEmail = (email: string) => {
-    setIsPremium(true);
-    localStorage.setItem('dogkit_unlocked', 'true');
-    localStorage.setItem('dogkit_premium', 'true');
-    setUserAccount(prev => {
-      const updated: UserAccount = {
-        id: prev?.id || 'user_' + Date.now(),
-        name: prev?.name || email.split('@')[0],
-        email: email,
-        provider: 'email',
-        joinedAt: prev?.joinedAt || new Date().toISOString(),
-        is_premium: true,
-        trial_start: prev?.trial_start,
-        trial_end: prev?.trial_end
-      };
-      localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
-      return updated;
-    });
-    setIsTrialExpiredModalOpen(false);
+  // Sblocco con codice di accesso verificato dal server (prima bastava una email qualsiasi).
+  const handleUnlockWithEmail = (code: string) => {
+    fetch('/api/redeem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    })
+      .then(r => r.json())
+      .then((data: { ok?: boolean }) => {
+        if (!data?.ok) {
+          window.alert('Codice non valido. Controlla di averlo scritto bene, oppure scrivi a mpfprosolution@gmail.com.');
+          return;
+        }
+        setIsPremium(true);
+        localStorage.setItem('dogkit_unlocked', 'true');
+        localStorage.setItem('dogkit_premium', 'true');
+        setUserAccount(prev => {
+          if (!prev) return prev;
+          const updated: UserAccount = { ...prev, is_premium: true };
+          localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
+          return updated;
+        });
+        setIsTrialExpiredModalOpen(false);
+      })
+      .catch(() => window.alert('Verifica non riuscita. Riprova tra poco.'));
   };
 
   // Sequenza email automatica in base a trial_start: giorni 0, 2, 7, 11, 13, 14, 17

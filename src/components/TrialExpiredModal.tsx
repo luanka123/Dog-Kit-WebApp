@@ -123,7 +123,7 @@ export default function TrialExpiredModal({
                 onClick={() => setShowEmailCheck(!showEmailCheck)}
                 className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2 py-2 px-3"
               >
-                Hai già pagato con Stripe?
+                Hai un codice di accesso?
               </button>
             </div>
 
@@ -131,13 +131,14 @@ export default function TrialExpiredModal({
             {showEmailCheck && (
               <form onSubmit={handleVerifyEmail} className="p-4 bg-indigo-50/70 border border-indigo-200/80 rounded-2xl space-y-3">
                 <p className="text-xs font-bold text-indigo-900">
-                  Inserisci l'email usata per l'acquisto su Stripe per attivare istantaneamente la licenza:
+                  Inserisci il codice di accesso che hai ricevuto dopo l'acquisto per attivare la licenza:
                 </p>
                 <div className="flex gap-2">
                   <input
-                    type="email"
+                    type="text"
                     required
-                    placeholder="tuaemail@esempio.com"
+                    autoCapitalize="characters"
+                    placeholder="CODICE DI ACCESSO"
                     value={inputEmail}
                     onChange={(e) => setInputEmail(e.target.value)}
                     className="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-600"
