@@ -121,7 +121,7 @@ const safeSendNotification = (title: string, options?: NotificationOptions) => {
 };
 
 // Configura Stripe Dashboard → Prodotti → Dog Kit → Payment Links:
-// - After payment → Redirect to URL: https://dog-kit-web-app.vercel.app/?paid=true
+// - After payment → Redirect to URL: https://dog-kit-web-app.vercel.app/?session_id={CHECKOUT_SESSION_ID} (verificato da /api/verify-payment)
 // - Metadata: client_reference_id = dogkit
 
 // Costanti di Monetizzazione centralizzate
@@ -231,44 +231,48 @@ export default function App() {
     }
   }, [isTrialExpired, isPremium, readOnlyDismissed]);
 
-  // Intercettatore parametri di ritorno pagamento Stripe (?paid=true, ?pay=success, ?session_id=...)
+  // Sicurezza: ?paid=true, ?pay=success ed ?email= NON sbloccano nulla.
+  // Il ritorno da Stripe (?session_id=cs_...) attiva il premium SOLO se il server (/api/verify-payment)
+  // conferma con Stripe che la sessione è stata pagata. In alternativa: codice di accesso (/api/redeem).
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const isPaidReturn = params.get('paid') === 'true' || params.get('pay') === 'success' || Boolean(params.get('session_id'));
-      const customerEmail = params.get('customer_email') || params.get('email');
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (params.has('paid') || params.has('pay') || params.has('session_id') || params.has('email')) {
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, newUrl);
+    }
 
-      if (isPaidReturn) {
-        setIsPremium(true);
-        // Salva in localStorage per le sessioni future
-        localStorage.setItem('dogkit_unlocked', 'true');
-        localStorage.setItem('dogkit_premium', 'true');
-        setStripeSuccess(true);
-
-        // Webhook/redirect: collega utente tramite email
-        if (customerEmail) {
-          setUserAccount(prev => {
-            const updated: UserAccount = {
-              id: prev?.id || 'user_' + Date.now(),
-              name: prev?.name || customerEmail.split('@')[0],
-              email: customerEmail,
-              provider: 'email',
-              joinedAt: prev?.joinedAt || new Date().toISOString(),
-              is_premium: true,
-              trial_start: prev?.trial_start,
-              trial_end: prev?.trial_end
-            };
-            localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
-            return updated;
-          });
-        }
-
-        // Rimuove i parametri per ripulire l'indirizzo nel browser mantenendo l'esperienza fluida
-        const newUrl = window.location.pathname + window.location.hash;
-        window.history.replaceState({}, document.title, newUrl);
-      } else if (localStorage.getItem('dogkit_unlocked') === 'true' || localStorage.getItem('dogkit_premium') === 'true') {
-        setIsPremium(true);
-      }
+    if (sessionId) {
+      fetch('/api/verify-payment?session_id=' + encodeURIComponent(sessionId))
+        .then(r => r.json())
+        .then((data: { paid?: boolean; email?: string | null }) => {
+          if (!data?.paid) return;
+          setIsPremium(true);
+          localStorage.setItem('dogkit_unlocked', 'true');
+          localStorage.setItem('dogkit_premium', 'true');
+          setStripeSuccess(true);
+          const customerEmail = data.email;
+          if (customerEmail) {
+            setUserAccount(prev => {
+              const updated: UserAccount = {
+                id: prev?.id || 'user_' + Date.now(),
+                name: prev?.name || customerEmail.split('@')[0],
+                email: customerEmail,
+                provider: 'email',
+                joinedAt: prev?.joinedAt || new Date().toISOString(),
+                is_premium: true,
+                trial_start: prev?.trial_start,
+                trial_end: prev?.trial_end
+              };
+              localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
+              return updated;
+            });
+          }
+        })
+        .catch(() => { /* nessuno sblocco se la verifica fallisce */ });
+    } else if (localStorage.getItem('dogkit_unlocked') === 'true' || localStorage.getItem('dogkit_premium') === 'true') {
+      setIsPremium(true);
     }
   }, []);
 
@@ -525,26 +529,31 @@ export default function App() {
     setIsMandatoryOnboardingOpen(false);
   };
 
-  // Handler sblocco licenza Stripe tramite email
-  const handleUnlockWithEmail = (email: string) => {
-    setIsPremium(true);
-    localStorage.setItem('dogkit_unlocked', 'true');
-    localStorage.setItem('dogkit_premium', 'true');
-    setUserAccount(prev => {
-      const updated: UserAccount = {
-        id: prev?.id || 'user_' + Date.now(),
-        name: prev?.name || email.split('@')[0],
-        email: email,
-        provider: 'email',
-        joinedAt: prev?.joinedAt || new Date().toISOString(),
-        is_premium: true,
-        trial_start: prev?.trial_start,
-        trial_end: prev?.trial_end
-      };
-      localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
-      return updated;
-    });
-    setIsTrialExpiredModalOpen(false);
+  // Sblocco con codice di accesso verificato dal server (prima bastava una email qualsiasi).
+  const handleUnlockWithEmail = (email: string, code: string) => {
+    fetch('/api/redeem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code })
+    })
+      .then(r => r.json())
+      .then((data: { ok?: boolean; expired?: boolean }) => {
+        if (!data?.ok) {
+          window.alert(data?.expired ? 'Codice scaduto. Scrivi a mpfprosolution@gmail.com per riceverne uno nuovo.' : 'Codice o email non validi. Controlla di averli scritti bene, oppure scrivi a mpfprosolution@gmail.com.');
+          return;
+        }
+        setIsPremium(true);
+        localStorage.setItem('dogkit_unlocked', 'true');
+        localStorage.setItem('dogkit_premium', 'true');
+        setUserAccount(prev => {
+          if (!prev) return prev;
+          const updated: UserAccount = { ...prev, is_premium: true };
+          localStorage.setItem('dogkit_user_account', JSON.stringify(updated));
+          return updated;
+        });
+        setIsTrialExpiredModalOpen(false);
+      })
+      .catch(() => window.alert('Verifica non riuscita. Riprova tra poco.'));
   };
 
   // Sequenza email automatica in base a trial_start: giorni 0, 2, 7, 11, 13, 14, 17
