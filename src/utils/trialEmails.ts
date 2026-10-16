@@ -70,7 +70,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 
               <p style="font-size:13px;color:#64748b;text-align:center;margin-top:20px;">
                 Dopo la prova: 29€ una volta sola, per sempre. Nessun canone periodico.<br/>
-                Hai già deciso? <a href="${checkoutUrl}" style="color:#4f46e5;font-weight:700;">Sblocca subito a 29€ a vita</a>.
+                Hai già deciso? <a href="${checkoutUrl}" style="color:#4f46e5;font-weight:700;">Sblocca per sempre a 29€</a>.
               </p>
             </td>
           </tr>
@@ -194,7 +194,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
               </div>
 
               <p style="text-align:center;font-size:13px;color:#64748b;margin-top:16px;">
-                Vuoi toglierti il pensiero fin da ora? <a href="${checkoutUrl}" style="color:#2563eb;font-weight:700;">Sblocca a vita a 29€</a>
+                Vuoi toglierti il pensiero fin da ora? <a href="${checkoutUrl}" style="color:#2563eb;font-weight:700;">Sblocca per sempre a 29€</a>
               </p>
             </td>
           </tr>
@@ -254,7 +254,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 
               <div style="text-align:center;margin:30px 0 16px 0;">
                 <a href="${checkoutUrl}" style="background-color:#16a34a;color:#ffffff;text-decoration:none;padding:15px 32px;font-size:15px;font-weight:800;border-radius:12px;display:inline-block;box-shadow:0 4px 10px rgba(22,163,74,0.3);">
-                  Sblocca Dog Kit a 29€ a Vita →
+                  Sblocca Dog Kit a 29€ per sempre →
                 </a>
               </div>
             </td>
@@ -272,7 +272,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 </html>
       `;
     },
-    getText: (data) => `Mancano 3 giorni alla fine della prova gratuita di Dog Kit per ${data.dogName || "il tuo cane"}. Sblocca a vita a 29€ una tantum: ${data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b"}`
+    getText: (data) => `Mancano 3 giorni alla fine della prova gratuita di Dog Kit per ${data.dogName || "il tuo cane"}. Sblocca per sempre a 29€ una tantum: ${data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b"}`
   },
 
   // Giorno 13: Domani scade
@@ -312,7 +312,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 
               <div style="text-align:center;margin:32px 0 16px 0;">
                 <a href="${checkoutUrl}" style="background-color:#16a34a;color:#ffffff;text-decoration:none;padding:16px 36px;font-size:16px;font-weight:800;border-radius:12px;display:inline-block;box-shadow:0 4px 12px rgba(22,163,74,0.35);">
-                  Sblocca Ora a 29€ a Vita →
+                  Sblocca Ora a 29€ per sempre →
                 </a>
               </div>
 
