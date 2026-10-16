@@ -66,7 +66,7 @@ export default function TrialExpiredModal({
             </h3>
 
             <p className="text-slate-300 text-xs sm:text-sm font-medium mt-2 max-w-md mx-auto">
-              Sblocca Dog Kit per sempre a 29€ – garanzia 14 giorni soddisfatti o rimborsati.
+              Sblocca Dog Kit per sempre a 1 € – garanzia 14 giorni soddisfatti o rimborsati.
             </p>
           </div>
 
@@ -85,7 +85,7 @@ export default function TrialExpiredModal({
               </div>
               <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800">
                 <ShieldCheck size={16} className="text-indigo-600 shrink-0" />
-                <span>Nessun canone mensile: <strong>29€ una volta sola</strong> per l'accesso a vita.</span>
+                <span>Nessun canone mensile: <strong>1 € una volta sola</strong> per l'accesso a vita.</span>
               </div>
             </div>
 
@@ -97,7 +97,7 @@ export default function TrialExpiredModal({
                 rel="noopener noreferrer"
                 className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-xl shadow-emerald-600/30 transition flex items-center justify-center gap-2.5 cursor-pointer text-center no-underline"
               >
-                <span>Sblocca Dog Kit per sempre a 29€</span>
+                <span>Sblocca Dog Kit per sempre a 1 €</span>
                 <ArrowRight size={20} />
               </a>
 

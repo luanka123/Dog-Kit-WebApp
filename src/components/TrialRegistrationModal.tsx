@@ -219,7 +219,7 @@ export default function TrialRegistrationModal({
                   <span>Nessuna carta di credito richiesta. Nessun addebito automatico.</span>
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-emerald-800 font-medium pl-6">
-                  <span>Dopo la prova: <strong>29€ una volta sola, per sempre</strong>. Nessun abbonamento.</span>
+                  <span>Dopo la prova: <strong>1 € una volta sola, per sempre</strong>. Nessun abbonamento.</span>
                 </div>
               </div>
 
@@ -240,7 +240,7 @@ export default function TrialRegistrationModal({
               </button>
 
               <p className="text-center text-[11px] text-slate-500 font-medium">
-                Dopo la prova: 29€ una volta sola, per sempre. Nessun abbonamento.
+                Dopo la prova: 1 € una volta sola, per sempre. Nessun abbonamento.
               </p>
             </form>
 
@@ -252,7 +252,7 @@ export default function TrialRegistrationModal({
                   onClick={onDirectCheckout}
                   className="text-xs text-indigo-600 hover:text-indigo-800 font-bold underline underline-offset-2"
                 >
-                  Hai già deciso? Sblocca subito a 29€
+                  Hai già deciso? Sblocca subito a 1 €
                 </button>
               </div>
             )}

@@ -29,7 +29,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
     getHtml: (data) => {
       const dog = data.dogName || "il tuo cane";
       const appUrl = data.appUrl || window?.location?.origin || "https://dog-kit.web.app";
-      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b";
+      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f";
 
       return `
 <!DOCTYPE html>
@@ -69,8 +69,8 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
               </div>
 
               <p style="font-size:13px;color:#64748b;text-align:center;margin-top:20px;">
-                Dopo la prova: 29€ una volta sola, per sempre. Nessun canone periodico.<br/>
-                Hai già deciso? <a href="${checkoutUrl}" style="color:#4f46e5;font-weight:700;">Sblocca per sempre a 29€</a>.
+                Dopo la prova: 1 € una volta sola, per sempre. Nessun canone periodico.<br/>
+                Hai già deciso? <a href="${checkoutUrl}" style="color:#4f46e5;font-weight:700;">Sblocca per sempre a 1 €</a>.
               </p>
             </td>
           </tr>
@@ -156,7 +156,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
     getHtml: (data) => {
       const dog = data.dogName || "il tuo cane";
       const appUrl = data.appUrl || window?.location?.origin || "https://dog-kit.web.app";
-      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b";
+      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f";
 
       return `
 <!DOCTYPE html>
@@ -183,7 +183,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
               <div style="background-color:#eff6ff;border:1px solid #bfdbfe;padding:20px;border-radius:14px;margin:22px 0;">
                 <h4 style="margin:0 0 8px 0;color:#1e40af;font-size:15px;">Mancano 7 giorni al termine della prova</h4>
                 <p style="margin:0;font-size:13px;color:#3b82f6;line-height:1.5;">
-                  Tutti i tuoi dati inseriti rimarranno sempre salvati. Alla scadenza potrai continuare a usare Dog Kit per sempre con <strong>29€ una tantum</strong>.
+                  Tutti i tuoi dati inseriti rimarranno sempre salvati. Alla scadenza potrai continuare a usare Dog Kit per sempre con <strong>1 € una tantum</strong>.
                 </p>
               </div>
 
@@ -194,7 +194,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
               </div>
 
               <p style="text-align:center;font-size:13px;color:#64748b;margin-top:16px;">
-                Vuoi toglierti il pensiero fin da ora? <a href="${checkoutUrl}" style="color:#2563eb;font-weight:700;">Sblocca per sempre a 29€</a>
+                Vuoi toglierti il pensiero fin da ora? <a href="${checkoutUrl}" style="color:#2563eb;font-weight:700;">Sblocca per sempre a 1 €</a>
               </p>
             </td>
           </tr>
@@ -222,7 +222,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
     getHtml: (data) => {
       const dog = data.dogName || "il tuo cane";
       const appUrl = data.appUrl || window?.location?.origin || "https://dog-kit.web.app";
-      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b";
+      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f";
 
       return `
 <!DOCTYPE html>
@@ -248,13 +248,13 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
               <div style="background-color:#fef3c7;border-left:4px solid #f59e0b;padding:18px 20px;border-radius:12px;margin:22px 0;">
                 <p style="margin:0;font-size:14px;color:#92400e;line-height:1.6;">
                   🔒 <strong>Cosa succede dopo 14 giorni?</strong><br/>
-                  I dati di ${dog} restano salvati. Per continuare a ricevere promemoria automatici e aggiornare la cartella clinica, ti basta sbloccare Dog Kit con <strong>29€ una volta sola</strong> (garanzia 14 giorni soddisfatti o rimborsati).
+                  I dati di ${dog} restano salvati. Per continuare a ricevere promemoria automatici e aggiornare la cartella clinica, ti basta sbloccare Dog Kit con <strong>1 € una volta sola</strong> (garanzia 14 giorni soddisfatti o rimborsati).
                 </p>
               </div>
 
               <div style="text-align:center;margin:30px 0 16px 0;">
                 <a href="${checkoutUrl}" style="background-color:#16a34a;color:#ffffff;text-decoration:none;padding:15px 32px;font-size:15px;font-weight:800;border-radius:12px;display:inline-block;box-shadow:0 4px 10px rgba(22,163,74,0.3);">
-                  Sblocca Dog Kit a 29€ per sempre →
+                  Sblocca Dog Kit a 1 € per sempre →
                 </a>
               </div>
             </td>
@@ -272,7 +272,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 </html>
       `;
     },
-    getText: (data) => `Mancano 3 giorni alla fine della prova gratuita di Dog Kit per ${data.dogName || "il tuo cane"}. Sblocca per sempre a 29€ una tantum: ${data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b"}`
+    getText: (data) => `Mancano 3 giorni alla fine della prova gratuita di Dog Kit per ${data.dogName || "il tuo cane"}. Sblocca per sempre a 1 € una tantum: ${data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f"}`
   },
 
   // Giorno 13: Domani scade
@@ -282,7 +282,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
     previewText: (dog: string) => `Ultimo giorno di accesso completo. Domani l'app entrerà in sola lettura.`,
     getHtml: (data) => {
       const dog = data.dogName || "il tuo cane";
-      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b";
+      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f";
 
       return `
 <!DOCTYPE html>
@@ -307,12 +307,12 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
               
               <p style="font-size:15px;line-height:1.6;color:#475569;">
                 Non rischiare di dimenticare un vaccino o l'antiparassitario: attiva ora la licenza a vita di Dog Kit. 
-                <strong>29€ una sola volta, per sempre. Nessun abbonamento futuro.</strong>
+                <strong>1 € una sola volta, per sempre. Nessun abbonamento futuro.</strong>
               </p>
 
               <div style="text-align:center;margin:32px 0 16px 0;">
                 <a href="${checkoutUrl}" style="background-color:#16a34a;color:#ffffff;text-decoration:none;padding:16px 36px;font-size:16px;font-weight:800;border-radius:12px;display:inline-block;box-shadow:0 4px 12px rgba(22,163,74,0.35);">
-                  Sblocca Ora a 29€ per sempre →
+                  Sblocca Ora a 1 € per sempre →
                 </a>
               </div>
 
@@ -334,17 +334,17 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 </html>
       `;
     },
-    getText: (data) => `Domani scade la prova di Dog Kit per ${data.dogName || "il tuo cane"}. Sblocca per sempre a 29€: ${data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b"}`
+    getText: (data) => `Domani scade la prova di Dog Kit per ${data.dogName || "il tuo cane"}. Sblocca per sempre a 1 €: ${data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f"}`
   },
 
   // Giorno 14: Prova Scaduta oggi
   14: {
     day: 14,
     subject: (dog: string) => `🔒 La tua prova è finita oggi. I dati di ${dog} sono al sicuro`,
-    previewText: (dog: string) => `Sblocca Dog Kit per sempre a 29€ – garanzia 14 giorni soddisfatti o rimborsati.`,
+    previewText: (dog: string) => `Sblocca Dog Kit per sempre a 1 € – garanzia 14 giorni soddisfatti o rimborsati.`,
     getHtml: (data) => {
       const dog = data.dogName || "il tuo cane";
-      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b";
+      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f";
 
       return `
 <!DOCTYPE html>
@@ -370,7 +370,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
               
               <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;padding:20px;border-radius:14px;margin:22px 0;text-align:center;">
                 <p style="margin:0;font-size:15px;font-weight:700;color:#1e293b;">
-                  Sblocca Dog Kit per sempre a 29€
+                  Sblocca Dog Kit per sempre a 1 €
                 </p>
                 <p style="margin:4px 0 0 0;font-size:13px;color:#64748b;">
                   Garanzia 14 giorni soddisfatti o rimborsati. Nessun abbonamento mensile.
@@ -379,7 +379,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 
               <div style="text-align:center;margin:30px 0 16px 0;">
                 <a href="${checkoutUrl}" style="background-color:#16a34a;color:#ffffff;text-decoration:none;padding:16px 36px;font-size:16px;font-weight:800;border-radius:12px;display:inline-block;box-shadow:0 4px 12px rgba(22,163,74,0.35);">
-                  Sblocca Dog Kit Ora (29€ Una Tantum) →
+                  Sblocca Dog Kit Ora (1 € Una Tantum) →
                 </a>
               </div>
             </td>
@@ -397,17 +397,17 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 </html>
       `;
     },
-    getText: (data) => `La tua prova è finita. I dati di ${data.dogName || "il tuo cane"} sono al sicuro. Sblocca Dog Kit per sempre a 29€ – garanzia 14 giorni soddisfatti o rimborsati: ${data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b"}`
+    getText: (data) => `La tua prova è finita. I dati di ${data.dogName || "il tuo cane"} sono al sicuro. Sblocca Dog Kit per sempre a 1 € – garanzia 14 giorni soddisfatti o rimborsati: ${data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f"}`
   },
 
   // Giorno 17: Ultimo follow-up
   17: {
     day: 17,
-    subject: (dog: string) => `🐕 Conserviamo ancora la cartella di ${dog}: riattiva Dog Kit a 29€ per sempre`,
-    previewText: (dog: string) => `I tuoi dati e promemoria ti aspettano. Riattiva con 29€ una tantum.`,
+    subject: (dog: string) => `🐕 Conserviamo ancora la cartella di ${dog}: riattiva Dog Kit a 1 € per sempre`,
+    previewText: (dog: string) => `I tuoi dati e promemoria ti aspettano. Riattiva con 1 € una tantum.`,
     getHtml: (data) => {
       const dog = data.dogName || "il tuo cane";
-      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b";
+      const checkoutUrl = data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f";
 
       return `
 <!DOCTYPE html>
@@ -429,7 +429,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
                 Volevamo solo ricordarti che tutto lo storico, i vaccini e i promemoria che hai impostato per ${dog} sono ancora memorizzati e pronti all'uso.
               </p>
               <p style="font-size:15px;line-height:1.6;color:#475569;">
-                Con un solo pagamento di <strong>29€ (invece di 149€)</strong> riattivi subito i promemoria automatici, la sincronizzazione familiare e gli aggiornamenti a vita.
+                Con un solo pagamento di <strong>1 € (invece di 149€)</strong> riattivi subito i promemoria automatici, la sincronizzazione familiare e gli aggiornamenti a vita.
               </p>
 
               <div style="text-align:center;margin:28px 0 16px 0;">
@@ -452,7 +452,7 @@ export const TRIAL_EMAIL_SEQUENCE: Record<number, TrialEmailDef> = {
 </html>
       `;
     },
-    getText: (data) => `Conserviamo ancora la cartella di ${data.dogName || "il tuo cane"}. Riattiva Dog Kit per sempre a 29€: ${data.checkoutUrl || "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b"}`
+    getText: (data) => `Conserviamo ancora la cartella di ${data.dogName || "il tuo cane"}. Riattiva Dog Kit per sempre a 1 €: ${data.checkoutUrl || "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f"}`
   }
 };
 

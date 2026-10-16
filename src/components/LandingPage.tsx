@@ -22,7 +22,7 @@ export default function LandingPage({
   onStartTrial, 
   onDirectCheckout, 
   onEnterApp,
-  checkoutUrl = "https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b"
+  checkoutUrl = "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f"
 }: LandingPageProps) {
   const [spotsLeft, setSpotsLeft] = useState<number>(47);
 
@@ -47,6 +47,9 @@ export default function LandingPage({
   }, []);
 
   const handleStartTrial = () => {
+    window.location.href = checkoutUrl;
+    return;
+    // eslint-disable-next-line no-unreachable
     if (onStartTrial) {
       onStartTrial();
     } else if (onEnterApp) {
@@ -85,16 +88,12 @@ export default function LandingPage({
 
   const faqs = [
     {
-      q: "Cosa succede dopo 14 giorni?",
-      a: "I tuoi dati restano salvati. Per continuare a usare promemoria e cartella clinica sblocchi Dog Kit a 29€, una volta sola."
+      q: "Quanto costa e per quanto tempo vale?",
+      a: "Paghi 1 € una sola volta e hai accesso per sempre. Nessun abbonamento, nessun rinnovo."
     },
     {
-      q: "Serve inserire la carta di credito per la prova gratuita?",
-      a: "No, assolutamente nessuna carta richiesta. Registrati solo con la tua email per accedere subito a tutte le funzioni per 14 giorni."
-    },
-    {
-      q: "Cosa include l'accesso definitivo a 29€ una volta, per sempre?",
-      a: "Con un unico pagamento di 29€ (invece di 149€) ottieni accesso illimitato a vita a tutte le funzionalità di Dog Kit: promemoria sanitari, cartella clinica per tutti i tuoi cani, sincronizzazione in famiglia ed esportazione PDF senza alcun abbonamento futuro."
+      q: "Cosa include l'accesso definitivo a 1 € una volta, per sempre?",
+      a: "Con un unico pagamento di 1 € (invece di 149€) ottieni accesso illimitato a vita a tutte le funzionalità di Dog Kit: promemoria sanitari, cartella clinica per tutti i tuoi cani, sincronizzazione in famiglia ed esportazione PDF senza alcun abbonamento futuro."
     },
     {
       q: "Funziona su iPhone, Android e computer?",
@@ -122,7 +121,7 @@ export default function LandingPage({
             onClick={handleStartTrial}
             className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition transform hover:-translate-y-0.5 cursor-pointer"
           >
-            Inizia prova gratis
+            Accesso a 1 €
           </button>
         </div>
       </header>
@@ -132,7 +131,7 @@ export default function LandingPage({
         
         {/* Social Proof Reale */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs sm:text-sm font-semibold mb-6">
-          <span>🐾 Appena lanciata — prova gratis 14 giorni</span>
+          <span>🐾 Appena lanciata — accesso per sempre a 1 €</span>
         </div>
 
         {/* H1 Richiesto Esatto */}
@@ -147,7 +146,7 @@ export default function LandingPage({
 
         {/* Urgenza Banner Pill */}
         <div className="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs sm:text-sm font-bold">
-          <span>🔥 PROVA GRATIS 14 GIORNI — poi 29€ una volta, per sempre (Prezzo normale <span className="line-through text-slate-400">149€</span>)</span>
+          <span>🔥 OFFERTA LANCIO — 1 € una volta, per sempre (Prezzo normale <span className="line-through text-slate-400">149€</span>)</span>
         </div>
 
         {/* CTA PRINCIPALE RICHIESTO */}
@@ -156,13 +155,13 @@ export default function LandingPage({
             onClick={handleStartTrial}
             className="w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition transform hover:-translate-y-1 cursor-pointer"
           >
-            <span>Provalo GRATIS 14 giorni 🐶 Senza carta</span>
+            <span>Accesso per sempre a 1 € 🐶</span>
             <ArrowRight className="w-5 h-5 text-white" />
           </button>
 
           {/* SOTTO LA CTA RICHIESTO ESATTO */}
           <p className="text-xs sm:text-sm text-slate-600 font-semibold text-center">
-            Poi 29€ una volta, per sempre
+            Pagamento unico, sicuro con Stripe. Nessun abbonamento.
           </p>
         </div>
 
@@ -170,7 +169,7 @@ export default function LandingPage({
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-medium">
           <span className="flex items-center gap-1.5">
             <Check className="w-4 h-4 text-emerald-600" />
-            Nessuna carta richiesta
+            Pagamento sicuro con Stripe
           </span>
           <span className="flex items-center gap-1.5">
             <Check className="w-4 h-4 text-emerald-600" />
@@ -222,7 +221,7 @@ export default function LandingPage({
         <div className="text-center max-w-xl mx-auto mb-8">
           <span className="text-xs font-black uppercase tracking-wider text-slate-500 block mb-1">Accesso Permanente</span>
           <h2 className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight">
-            Prova gratis 14 giorni, poi 29€ una volta per sempre
+            Accesso per sempre a 1 €
           </h2>
           <p className="mt-2 text-slate-600 text-sm sm:text-base">
             Prezzo di lancio. Prezzo normale <span className="line-through text-slate-400 font-semibold">149€</span>. Nessun canone mensile.
@@ -239,7 +238,7 @@ export default function LandingPage({
           {/* Prezzo */}
           <div className="flex items-center justify-center gap-3 my-2">
             <span className="text-2xl sm:text-3xl line-through text-slate-400 font-bold">149€</span>
-            <span className="text-5xl sm:text-6xl font-black text-slate-950">29€</span>
+            <span className="text-5xl sm:text-6xl font-black text-slate-950">1 €</span>
             <span className="text-xs font-extrabold uppercase bg-slate-100 text-slate-800 px-2.5 py-1 rounded-lg">Per sempre</span>
           </div>
 
@@ -295,11 +294,11 @@ export default function LandingPage({
               onClick={handleStartTrial}
               className="w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition transform hover:-translate-y-1 cursor-pointer"
             >
-              <span>Provalo GRATIS 14 giorni 🐶 Senza carta</span>
+              <span>Accesso per sempre a 1 € 🐶</span>
               <ArrowRight className="w-5 h-5 text-white" />
             </button>
             <p className="mt-3 text-xs sm:text-sm text-slate-600 font-semibold">
-              Poi 29€ una volta, per sempre
+              Pagamento unico, sicuro con Stripe. Nessun abbonamento.
             </p>
           </div>
 
@@ -311,7 +310,7 @@ export default function LandingPage({
               rel="noopener noreferrer"
               className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 font-bold underline underline-offset-4 cursor-pointer"
             >
-              Hai già deciso? Sblocca per sempre a 29€
+              Accesso per sempre a 1 €
             </a>
           </div>
 
@@ -355,7 +354,7 @@ export default function LandingPage({
               rel="noopener noreferrer"
               className="text-indigo-600 hover:text-indigo-800 font-bold underline underline-offset-2"
             >
-              Hai già deciso? Sblocca per sempre a 29€
+              Accesso per sempre a 1 €
             </a>
             <span>•</span>
             <a href="mailto:mpfprosolution@gmail.com" className="text-slate-800 hover:text-slate-950 underline underline-offset-2">

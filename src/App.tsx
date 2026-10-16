@@ -128,11 +128,11 @@ const safeSendNotification = (title: string, options?: NotificationOptions) => {
 const getSafeDefaultCheckoutUrl = (): string => {
   const envVal = (import.meta as any).env?.VITE_STRIPE_CHECKOUT_URL;
   if (envVal) return envVal;
-  return 'https://buy.stripe.com/4gM28qbECazD1b95ZkeME0b';
+  return 'https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f';
 };
 
 export const PREMIUM = {
-  prezzo: '29,00',
+  prezzo: '1,00',
   valuta: 'EUR',
   checkoutUrl: getSafeDefaultCheckoutUrl(),
   lezioniGratis: 3,
@@ -1112,7 +1112,7 @@ export default function App() {
               rel="noopener noreferrer"
               className="px-3.5 py-1 bg-white text-emerald-800 hover:bg-emerald-50 active:scale-95 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition flex items-center gap-1.5 no-underline ml-auto"
             >
-              <span>Sblocca per sempre a 29€</span>
+              <span>Sblocca per sempre a 1 €</span>
               <ArrowRight size={13} />
             </a>
           </div>
@@ -1140,7 +1140,7 @@ export default function App() {
                 rel="noopener noreferrer"
                 className="px-3.5 py-1 bg-white text-orange-950 hover:bg-amber-50 active:scale-95 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition flex items-center gap-1.5 no-underline"
               >
-                <span>Sblocca per sempre a 29€</span>
+                <span>Sblocca per sempre a 1 €</span>
                 <ArrowRight size={13} />
               </a>
             </div>
