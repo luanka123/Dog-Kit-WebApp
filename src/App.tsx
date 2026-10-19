@@ -4947,7 +4947,7 @@ function PremiumView({
             </a>
             
             <p className="text-[10px] text-slate-400">
-              Soddisfatto o rimborsato entro 14 giorni dall’acquisto.
+              Pagamento unico, nessun abbonamento.
             </p>
           </div>
         </div>

@@ -66,7 +66,7 @@ export default function TrialExpiredModal({
             </h3>
 
             <p className="text-slate-300 text-xs sm:text-sm font-medium mt-2 max-w-md mx-auto">
-              Sblocca Dog Kit per sempre a 1 € – garanzia 14 giorni soddisfatti o rimborsati.
+              Sblocca Dog Kit per sempre a 1 € – pagamento unico, nessun abbonamento.
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export default function TrialExpiredModal({
               </a>
 
               <p className="text-center text-xs text-slate-500 font-semibold">
-                🛡️ Garanzia 14 giorni soddisfatti o rimborsati • Pagamento sicuro con Stripe
+                🔒 Pagamento unico • Sicuro con Stripe
               </p>
             </div>
 
