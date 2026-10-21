@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dogkit-cache-v4';
+const CACHE_NAME = 'dogkit-cache-v5';
 const OFFLINE_FALLBACK_URL = '/index.html';
 
 const STATIC_ASSETS_TO_PRECACHE = [
