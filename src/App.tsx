@@ -950,6 +950,7 @@ export default function App() {
           }}
           checkoutUrl={customStripeUrl}
           onEnterApp={() => setIsTrialRegistrationOpen(true)}
+          onRedeem={handleUnlockWithEmail}
         />
         <TrialRegistrationModal
           isOpen={isTrialRegistrationOpen}

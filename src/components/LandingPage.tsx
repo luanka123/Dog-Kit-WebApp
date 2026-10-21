@@ -15,6 +15,7 @@ export interface LandingPageProps {
   onStartTrial?: () => void;
   onDirectCheckout?: () => void;
   onEnterApp?: () => void;
+  onRedeem?: (email: string, code: string) => void;
   checkoutUrl?: string;
 }
 
@@ -22,9 +23,13 @@ export default function LandingPage({
   onStartTrial, 
   onDirectCheckout, 
   onEnterApp,
+  onRedeem,
   checkoutUrl = "https://buy.stripe.com/9B600ieQOcHLf1ZbjEeME0f"
 }: LandingPageProps) {
   const [spotsLeft, setSpotsLeft] = useState<number>(47);
+  const [showCode, setShowCode] = useState<boolean>(false);
+  const [codeEmail, setCodeEmail] = useState<string>('');
+  const [codeValue, setCodeValue] = useState<string>('');
 
   useEffect(() => {
     const saved = localStorage.getItem('dogkit_spots_left_v1');
@@ -301,6 +306,49 @@ export default function LandingPage({
               Pagamento unico, sicuro con Stripe. Nessun abbonamento.
             </p>
           </div>
+
+          {/* Accesso con codice (per chi ha già pagato o ha ricevuto un codice) */}
+          {onRedeem && (
+            <div id="codice-accesso" className="mt-6 pt-5 border-t border-slate-100 text-center">
+              <button
+                type="button"
+                onClick={() => setShowCode(!showCode)}
+                className="text-sm text-indigo-600 hover:text-indigo-800 font-bold underline underline-offset-4 cursor-pointer"
+              >
+                Ho già pagato o ho un codice di accesso
+              </button>
+              {showCode && (
+                <form
+                  onSubmit={(e) => { e.preventDefault(); onRedeem(codeEmail.trim(), codeValue.trim()); }}
+                  className="mt-4 max-w-sm mx-auto space-y-3 text-left"
+                >
+                  <input
+                    type="email"
+                    required
+                    placeholder="La tua email"
+                    value={codeEmail}
+                    onChange={(e) => setCodeEmail(e.target.value)}
+                    className="w-full px-3 py-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none focus:border-indigo-600"
+                  />
+                  <input
+                    type="text"
+                    required
+                    autoCapitalize="characters"
+                    placeholder="CODICE DI ACCESSO"
+                    value={codeValue}
+                    onChange={(e) => setCodeValue(e.target.value)}
+                    className="w-full px-3 py-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none focus:border-indigo-600"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl text-sm font-black hover:bg-indigo-700 transition"
+                  >
+                    Entra in Dog Kit
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
 
           {/* Link secondario SOLO in fondo richiesto */}
           <div className="mt-6 pt-5 border-t border-slate-100 text-center">
