@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dogkit-cache-v3';
+const CACHE_NAME = 'dogkit-cache-v4';
 const OFFLINE_FALLBACK_URL = '/index.html';
 
 const STATIC_ASSETS_TO_PRECACHE = [
@@ -6,6 +6,9 @@ const STATIC_ASSETS_TO_PRECACHE = [
   '/index.html',
   '/manifest.json',
   '/favicon.png',
+  '/apple-touch-icon.png',
+  '/icon-192.png',
+  '/icon-512.png',
   '/landing.html'
 ];
 
